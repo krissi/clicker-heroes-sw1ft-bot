@@ -34,26 +34,26 @@ IfNotExist, ch_bot_settings.ahk
 ; Load user settings
 #Include *i ch_bot_settings.ahk
 
-if (libVersion != minLibVersion) {
-	showWarningSplash("The bot lib version must be " . minLibVersion . "!")
+if (bot_lib.libVersion != minLibVersion) {
+	bot_lib.showWarningSplash("The bot lib version must be " . minLibVersion . "!")
 	ExitApp
 }
 
 if (useConfigurationAssistant) {
-	configurationAssistant()
+	bot_lib.configurationAssistant()
 }
 
-clientCheck()
+bot_lib.clientCheck()
 
 if (deepRunClicks) {
 	Run, "%A_ScriptDir%\monster_clicker.ahk",, UseErrorLevel
 	if (ErrorLevel != 0) {
-		playWarningSound()
+		bot_lib.playWarningSound()
     	msgbox,,% script,% "Failed to auto-start monster_clicker.ahk (system error code = " . A_LastError . ")!"
 	}
 }
 
-handleAutorun()
+bot_lib.handleAutorun()
 
 ; -----------------------------------------------------------------------------------------
 ; -- Hotkeys (+=Shift, !=Alt, ^=Ctrl)
@@ -75,7 +75,7 @@ return
 
 ; Abort speed/deep runs and auto ascensions with Alt+Pause
 !Pause::
-	showSplashAlways("Aborting...")
+	bot_lib.showSplashAlways("Aborting...")
 	exitThread := true
 	exitDRThread := true
 return
@@ -85,18 +85,18 @@ return
 ; Ctrl+Alt+F2 should switch to the relics tab and then back
 
 ^!F1::
-	scrollToBottom()
+	bot_lib.scrollToBottom()
 return
 
 ^!F2::
-	switchToRelicTab()
-	switchToCombatTab()
+	bot_lib.switchToRelicTab()
+	bot_lib.switchToCombatTab()
 return
 
 ; Alt+F1 to F4 are here to test the individual parts of the full speed run loop
 
 !F1::
-	getClickable()
+	bot_lib.getClickable()
 return
 
 !F2::
@@ -104,7 +104,7 @@ return
 return
 
 !F3::
-	switchToCombatTab()
+	bot_lib.switchToCombatTab()
 	speedRun()
 return
 
@@ -125,7 +125,7 @@ return
 
 ; Stop looping when current speed run finishes with Shift+Pause
 +Pause::
-	toggleFlag("scheduleStop", scheduleStop)
+	bot_lib.toggleFlag("scheduleStop", scheduleStop)
 return
 
 ; Deep run
@@ -142,19 +142,19 @@ return
 ; Set previous ranger as re-gild target
 ^F6::
 	reGildRanger := reGildRanger > rangers.MinIndex() ? reGildRanger-1 : reGildRanger
-	showSplashAlways("Re-gild ranger set to " . rangers[reGildRanger])
+	bot_lib.showSplashAlways("Re-gild ranger set to " . rangers[reGildRanger])
 return
 
 ; Set next ranger as re-gild target
 ^F7::
 	reGildRanger := reGildRanger < rangers.MaxIndex() ? reGildRanger+1 : reGildRanger
-	showSplashAlways("Re-gild ranger set to " . rangers[reGildRanger])
+	bot_lib.showSplashAlways("Re-gild ranger set to " . rangers[reGildRanger])
 return
 
 ; Move "reGildCount" gilds to the target ranger (will pause the monster clicker if running)
 ^F8::
 	critical
-	playNotificationSound()
+	bot_lib.playNotificationSound()
 	msgbox, 4,% script,% "Move " . reGildCount . " gilds to " . rangers[reGildRanger] . "?"
 	ifmsgbox no
 		return
@@ -171,35 +171,35 @@ return
 ; Toggle boolean (true/false) flags
 
 +^F1::
-	toggleFlag("autoAscend", autoAscend)
+	bot_lib.toggleFlag("autoAscend", autoAscend)
 return
 
 +^F2::
-	toggleFlag("screenShotRelics", screenShotRelics)
+	bot_lib.toggleFlag("screenShotRelics", screenShotRelics)
 return
 
 +^F5::
-	toggleFlag("scheduleReload", scheduleReload)
+	bot_lib.toggleFlag("scheduleReload", scheduleReload)
 return
 
 +^F6::
-	toggleFlag("playNotificationSounds", playNotificationSounds)
+	bot_lib.toggleFlag("playNotificationSounds", playNotificationSounds)
 return
 
 +^F7::
-	toggleFlag("playWarningSounds", playWarningSounds)
+	bot_lib.toggleFlag("playWarningSounds", playWarningSounds)
 return
 
 +^F8::
-	toggleFlag("showSplashTexts", showSplashTexts)
+	bot_lib.toggleFlag("showSplashTexts", showSplashTexts)
 return
 
 +^F11::
-	toggleFlag("saveBeforeAscending", saveBeforeAscending)
+	bot_lib.toggleFlag("saveBeforeAscending", saveBeforeAscending)
 return
 
 +^F12::
-	toggleFlag("debug", debug)
+	bot_lib.toggleFlag("debug", debug)
 return
 
 ; -----------------------------------------------------------------------------------------
@@ -211,7 +211,7 @@ configurationAssistant() {
 	global
 
 	if (irisLevel < 145) {
-		playWarningSound()
+		bot_lib.playWarningSound()
 		msgbox,,% script,% "Your Iris do not fulfill the minimum level requirement of 145 or higher!"
 		exit
 	}
@@ -250,7 +250,7 @@ configurationAssistant() {
 
 	if (irisLevel < optimalLevel - 1001) {
 		local levels := optimalLevel - 1001 - irisLevel
-		playNotificationSound()
+		bot_lib.playNotificationSound()
 		msgbox,,% script,% "Your Iris is " . levels . " levels below the recommended ""optimal level - 1001"" rule."
 	}
 }
@@ -261,7 +261,7 @@ irisThreshold(lvl) {
 	local upperThreshold := lvl + 19
 	local lowerThreshold := lvl - 20
 	if (irisLevel >= lowerThreshold and irisLevel < upperThreshold) {
-		playWarningSound()
+		bot_lib.playWarningSound()
 		msgbox,,% script,% "Threshold proximity warning! You should level up your Iris to " . upperThreshold . " or higher."
 	}
 	return irisLevel > lvl
@@ -271,57 +271,57 @@ irisThreshold(lvl) {
 initRun() {
 	global
 
-	switchToCombatTab()
-	clickPos(xHero, yHero) ; prevent fails
+	bot_lib.switchToCombatTab()
+	bot_lib.clickPos(xHero, yHero) ; prevent fails
 
-	upgrade(initDownClicks[1],2,,2) ; cid --> brittany
-	upgrade(initDownClicks[2]) ; fisherman --> leon
-	upgrade(initDownClicks[3]) ; seer --> mercedes
-	upgrade(initDownClicks[4],,,,2) ; bobby --> king
-	upgrade(initDownClicks[5],2,,,2) ; ice --> amenhotep
-	upgrade(initDownClicks[6],,,2) ; beastlord --> shinatobe
-	upgrade(0,,,,,true) ; grant & frostleaf
+	bot_lib.upgrade(initDownClicks[1],2,,2) ; cid --> brittany
+	bot_lib.upgrade(initDownClicks[2]) ; fisherman --> leon
+	bot_lib.upgrade(initDownClicks[3]) ; seer --> mercedes
+	bot_lib.upgrade(initDownClicks[4],,,,2) ; bobby --> king
+	bot_lib.upgrade(initDownClicks[5],2,,,2) ; ice --> amenhotep
+	bot_lib.upgrade(initDownClicks[6],,,2) ; beastlord --> shinatobe
+	bot_lib.upgrade(0,,,,,true) ; grant & frostleaf
 
-	scrollToBottom()
-	buyAvailableUpgrades()
+	bot_lib.scrollToBottom()
+	bot_lib.buyAvailableUpgrades()
 }
 
 upgrade(times, cc1:=1, cc2:=1, cc3:=1, cc4:=1, skip:=false) {
 	global
 
 	if (!skip) {
-		ctrlClick(xLvl, yLvlInit, cc1)
-		ctrlClick(xLvl, yLvlInit + oLvl, cc2)
+		bot_lib.ctrlClick(xLvl, yLvlInit, cc1)
+		bot_lib.ctrlClick(xLvl, yLvlInit + oLvl, cc2)
 	}
-	ctrlClick(xLvl, yLvlInit + oLvl*2, cc3)
-	ctrlClick(xLvl, yLvlInit + oLvl*3, cc4)
+	bot_lib.ctrlClick(xLvl, yLvlInit + oLvl*2, cc3)
+	bot_lib.ctrlClick(xLvl, yLvlInit + oLvl*3, cc4)
 
-	scrollDown(times)
+	bot_lib.scrollDown(times)
 }
 
 loopSpeedRun() {
 	global
 
 	mode := hybridMode ? "hybrid" : "speed"
-	showSplashAlways("Starting " . mode . " runs...")
+	bot_lib.showSplashAlways("Starting " . mode . " runs...")
 	loop
 	{
-		getClickable()
+		bot_lib.getClickable()
 		sleep % coinPickUpDelay * 1000
-		initRun()
+		bot_lib.initRun()
 		if (activateSkillsAtStart) {
-			activateSkills(speedRunStartCombo[2])
+			bot_lib.activateSkills(speedRunStartCombo[2])
 		}
-		speedRun()
+		bot_lib.speedRun()
 		if (hybridMode) {
-			deepRun()
+			bot_lib.deepRun()
 		}
 		if (saveBeforeAscending) {
-			save()
+			bot_lib.save()
 		}
-		ascend(autoAscend)
-		handleScheduledStop()
-		handleScheduledReload(true)
+		bot_lib.ascend(autoAscend)
+		bot_lib.handleScheduledStop()
+		bot_lib.handleScheduledReload(true)
 	}
 }
 
@@ -335,7 +335,7 @@ speedRun() {
 	local tMax := 7 * 60 ; seconds
 	local lMax := 250 ; zones
 
-	local lvlAdjustment := round(firstStintAdjustment * lMax / tMax)
+	local lvlAdjustment := bot_lib.round(firstStintAdjustment * lMax / tMax)
 	local zoneLvl := gildedRanger * lMax + lvlAdjustment ; approx zone lvl where we can buy our gilded ranger @ lvl 150
 	local lvls := zoneLvl - irisLevel ; lvl's to get there
 
@@ -354,12 +354,12 @@ speedRun() {
 	
 	if (lvls > 0)
 	{
-		firstStintTime := ceil(lvls * tMax / lMax)
+		firstStintTime := bot_lib.ceil(lvls * tMax / lMax)
 		stints += 1
 	}
 
 	local srDuration := speedRunTime * 60
-	local totalClickDelay := ceil(srDuration / lvlUpDelay * zzz / 1000 + nextHeroDelay * stints)
+	local totalClickDelay := bot_lib.ceil(srDuration / lvlUpDelay * zzz / 1000 + nextHeroDelay * stints)
 	local lastStintTime := srDuration - firstStintTime - midStintTime - totalClickDelay
 	stints += 1
 
@@ -386,42 +386,42 @@ speedRun() {
 		output .= s . "lvlAdjustment = " . lvlAdjustment . nl
 		output .= s . "zoneLvl = " . zoneLvl . nl
 		output .= s . "lvls = " . lvls . nl
-		output .= s . "srDuration = " . formatSeconds(srDuration) . nl
+		output .= s . "srDuration = " . bot_lib.formatSeconds(srDuration) . nl
 		output .= s . "firstStintButton = " . firstStintButton . nl
-		output .= s . "firstStintTime = " . formatSeconds(firstStintTime) . nl
-		output .= s . "midStintTime = " . formatSeconds(midStintTime) . nl
-		output .= s . "lastStintTime = " . formatSeconds(lastStintTime) . nl
-		output .= s . "totalClickDelay = " . formatSeconds(totalClickDelay) . nl
+		output .= s . "firstStintTime = " . bot_lib.formatSeconds(firstStintTime) . nl
+		output .= s . "midStintTime = " . bot_lib.formatSeconds(midStintTime) . nl
+		output .= s . "lastStintTime = " . bot_lib.formatSeconds(lastStintTime) . nl
+		output .= s . "totalClickDelay = " . bot_lib.formatSeconds(totalClickDelay) . nl
 
 		clipboard := % output
 		msgbox % output
 		return
 	}
 
-	showSplash("Starting speed run...")
+	bot_lib.showSplash("Starting speed run...")
 
 	if (irisLevel < 2 * lMax + 10) ; Iris high enough to start with a ranger?
 	{
-		switchToCombatTab()
-		scrollDown(initDownClicks[1])
-		toggleMode() ; toggle to progression mode
-		lvlUp(firstStintTime, 0, 3, ++stint, stints) ; nope, let's bridge with Samurai
-		scrollToBottom()
+		bot_lib.switchToCombatTab()
+		bot_lib.scrollDown(initDownClicks[1])
+		bot_lib.toggleMode() ; toggle to progression mode
+		bot_lib.lvlUp(firstStintTime, 0, 3, ++stint, stints) ; nope, let's bridge with Samurai
+		bot_lib.scrollToBottom()
 	} else {
-		scrollToBottom()
-		toggleMode() ; toggle to progression mode
+		bot_lib.scrollToBottom()
+		bot_lib.toggleMode() ; toggle to progression mode
 		if (firstStintTime > 0) {
-			lvlUp(firstStintTime, 1, firstStintButton, ++stint, stints)
-			scrollWayDown(3)
+			bot_lib.lvlUp(firstStintTime, 1, firstStintButton, ++stint, stints)
+			bot_lib.scrollWayDown(3)
 		}
 	}
 	if (midStintTime > 0) {
-		lvlUp(midStintTime, 1, 2, ++stint, stints)
-		scrollWayDown(2)
+		bot_lib.lvlUp(midStintTime, 1, 2, ++stint, stints)
+		bot_lib.scrollWayDown(2)
 	}
-	lvlUp(lastStintTime, 1, lastStintButton, ++stint, stints)
+	bot_lib.lvlUp(lastStintTime, 1, lastStintButton, ++stint, stints)
 
-	showSplash("Speed run completed.")
+	bot_lib.showSplash("Speed run completed.")
 }
 
 deepRun() {
@@ -433,11 +433,11 @@ deepRun() {
 	local button := gildedRanger = 9 ? 3 : 2 ; special case for Astraea
 	local y := yLvl + oLvl * (button - 1)
 
-	showSplash("Starting deep run...")
+	bot_lib.showSplash("Starting deep run...")
 
-	startMouseMonitoring()
-	startProgress("Deep Run Progress", 0, drDuration // barUpdateDelay)
-	monsterClickerOn()
+	bot_lib.startMouseMonitoring()
+	bot_lib.startProgress("Deep Run Progress", 0, drDuration // barUpdateDelay)
+	bot_lib.monsterClickerOn()
 
 	local comboDelay := deepRunCombo[1]
 	local comboIndex := 2
@@ -447,35 +447,35 @@ deepRun() {
 	loop % drDuration
 	{
 		if (exitDRThread) {
-			monsterClickerOff()
-			stopProgress()
-			stopMouseMonitoring()
-			showSplashAlways("Deep run aborted!")
+			bot_lib.monsterClickerOff()
+			bot_lib.stopProgress()
+			bot_lib.stopMouseMonitoring()
+			bot_lib.showSplashAlways("Deep run aborted!")
 			exit
 		}
 		if (deepRunClicks) {
-			clickPos(xMonster, yMonster)
+			bot_lib.clickPos(xMonster, yMonster)
 		}
 		if (mod(t, comboDelay) = 0) {
-			activateSkills(deepRunCombo[comboIndex])
-			comboIndex := comboIndex < deepRunCombo.MaxIndex() ? comboIndex+1 : 2
+			bot_lib.activateSkills(deepRunCombo[comboIndex])
+			comboIndex := comboIndex < deepRunCombo.bot_lib.MaxIndex() ? comboIndex+1 : 2
 		}
 		if (mod(t, lvlUpDelay) = 0) {
-			ctrlClick(xLvl, y, 1, 0)
+			bot_lib.ctrlClick(xLvl, y, 1, 0)
 		}
 		if (mod(t, clickableHuntDelay) = 0 and t < stopHuntIndex) {
-			getClickable()
+			bot_lib.getClickable()
 		}
 		t += 1
-		updateProgress(t // barUpdateDelay, drDuration - t)
+		bot_lib.updateProgress(t // barUpdateDelay, drDuration - t)
 		sleep 1000
 	}
 
-	monsterClickerOff()
-	stopProgress()
-	stopMouseMonitoring()
+	bot_lib.monsterClickerOff()
+	bot_lib.stopProgress()
+	bot_lib.stopMouseMonitoring()
 
-	showSplash("Deep run ended.")
+	bot_lib.showSplash("Deep run ended.")
 	sleep 1000
 }
 
@@ -507,42 +507,42 @@ lvlUp(seconds, buyUpgrades, button, stint, stints) {
 	local y := yLvl + oLvl * (button - 1)
 	local title := "Speed Run Progress (" . stint . "/" . stints . ")"
 
-	startMouseMonitoring()
-	startProgress(title, 0, seconds // barUpdateDelay)
+	bot_lib.startMouseMonitoring()
+	bot_lib.startProgress(title, 0, seconds // barUpdateDelay)
 
 	if (buyUpgrades) {
-		ctrlClick(xLvl, y)
-		buyAvailableUpgrades()
+		bot_lib.ctrlClick(xLvl, y)
+		bot_lib.buyAvailableUpgrades()
 	}
-	maxClick(xLvl, y)
+	bot_lib.maxClick(xLvl, y)
 
 	local t := 0
 
 	loop % seconds
 	{
 		if (exitThread) {
-			stopProgress()
-			stopMouseMonitoring()
-			showSplashAlways("Speed run aborted!")
+			bot_lib.stopProgress()
+			bot_lib.stopMouseMonitoring()
+			bot_lib.showSplashAlways("Speed run aborted!")
 			exit
 		}
 		if (mod(t, lvlUpDelay) = 0) {
-			ctrlClick(xLvl, y)
+			bot_lib.ctrlClick(xLvl, y)
 		}
 		t += 1
-		updateProgress(t // barUpdateDelay, seconds - t)
+		bot_lib.updateProgress(t // barUpdateDelay, seconds - t)
 		sleep 1000
 	}
-	stopProgress()
-	stopMouseMonitoring()
+	bot_lib.stopProgress()
+	bot_lib.stopMouseMonitoring()
 }
 
 openSaveDialog() {
 	global
 
-	clickPos(xSettings, ySettings)
+	bot_lib.clickPos(xSettings, ySettings)
 	sleep % zzz * 3
-	clickPos(xSave, ySave)
+	bot_lib.clickPos(xSave, ySave)
 	sleep % zzz * 4
 }
 
@@ -551,7 +551,7 @@ save() {
 	local fileName := "ch" . A_NowUTC . ".txt"
 	local newFileName := ""
 
-	openSaveDialog()
+	bot_lib.openSaveDialog()
 
 	; Change the file name...
 	if (saveMode = 1) {
@@ -569,7 +569,7 @@ save() {
 	}
 
 	sleep % zzz * 3
-	clickPos(xSettingsClose, ySettingsClose)
+	bot_lib.clickPos(xSettingsClose, ySettingsClose)
 }
 
 openAncientsOptimizer() {
@@ -579,26 +579,26 @@ openAncientsOptimizer() {
 	FileRead, loaderSourceTemplate, %templateFileName%
 
 	local loaderFileName := A_Temp . "\ch_ao_" . A_NowUTC . ".html"
-	local file = FileOpen(loaderFileName, "w")
-	if !IsObject(file)
+	local file = bot_lib.FileOpen(loaderFileName, "w")
+	if !bot_lib.IsObject(file)
 	{
 		MsgBox % "Can't open " . loaderFileName . " for writing."
 		return
 	}
 
-	openSaveDialog()
+	bot_lib.openSaveDialog()
 
 	; Abort saving. Clipboard is good enough
 	ControlSend,, {esc}, ahk_class %dialogBoxClass%
 
 	sleep % zzz * 3
-	clickPos(xSettingsClose, ySettingsClose)
+	bot_lib.clickPos(xSettingsClose, ySettingsClose)
 
 	; Write loader file
-	local loaderSource := StrReplace(loaderSourceTemplate, "#####SAVEGAME#####", Clipboard)
+	local loaderSource := bot_lib.StrReplace(loaderSourceTemplate, "#####SAVEGAME#####", Clipboard)
 
-    file.write(loaderSource)
-    file.Close()
+    file.bot_lib.write(loaderSource)
+    file.bot_lib.Close()
 
     Run, %loaderFileName%
     sleep % zzz * 5
@@ -613,93 +613,93 @@ ascend(autoYes:=false) {
 
 	if (autoYes) {
 		if (autoAscendDelay > 0) {
-			showWarningSplash(autoAscendDelay . " seconds till ASCENSION! (Abort with Alt+Pause)", autoAscendDelay)
+			bot_lib.showWarningSplash(autoAscendDelay . " seconds till ASCENSION! (Abort with Alt+Pause)", autoAscendDelay)
 			if (exitThread) {
 				exitThread := false
-				showSplashAlways("Ascension aborted!")
+				bot_lib.showSplashAlways("Ascension aborted!")
 				exit
 			}
 		}
 	} else {
-		playWarningSound()
+		bot_lib.playWarningSound()
 		msgbox, 260,% script,Salvage Junk Pile & Ascend? ; default no
 		ifmsgbox no
 			exit
 	}
 
-	salvageJunkPile() ; must salvage junk relics before ascending
+	bot_lib.salvageJunkPile() ; must salvage junk relics before ascending
 
-	switchToCombatTab()
-	scrollDown(ascDownClicks)
+	bot_lib.switchToCombatTab()
+	bot_lib.scrollDown(ascDownClicks)
 	sleep % zzz * 2
 
 	; Scrolling is not an exact science, hence we click above, center and below
 	loop % 2 * extraClicks + 1
 	{
-		clickPos(xAsc, y)
+		bot_lib.clickPos(xAsc, y)
 		y += buttonSize
 	}
 	sleep % zzz * 4
-	clickPos(xYes, yYes)
+	bot_lib.clickPos(xYes, yYes)
 	sleep % zzz * 2
 }
 
 salvageJunkPile() {
 	global
 
-	switchToRelicTab()
+	bot_lib.switchToRelicTab()
 
 	if (autoAscend) {
 		if (screenShotRelics || displayRelicsDuration > 0) {
-			clickPos(xRelic, yRelic) ; focus
+			bot_lib.clickPos(xRelic, yRelic) ; focus
 		}
 
 		if (screenShotRelics) {
-			screenShot()
+			bot_lib.screenShot()
 		}
 
 		if (displayRelicsDuration > 0) {
-			showWarningSplash("Salvaging junk in " . displayRelicsDuration . " seconds! (Abort with Alt+Pause)", displayRelicsDuration)
+			bot_lib.showWarningSplash("Salvaging junk in " . displayRelicsDuration . " seconds! (Abort with Alt+Pause)", displayRelicsDuration)
 			if (exitThread) {
 				exitThread := false
-				showSplashAlways("Salvage aborted!")
+				bot_lib.showSplashAlways("Salvage aborted!")
 				exit
 			}
 		}
 
 		if (screenShotRelics || displayRelicsDuration > 0) {
-			clickPos(xRelic+100, yRelic) ; remove focus
+			bot_lib.clickPos(xRelic+100, yRelic) ; remove focus
 		}
 	}
 
-	clickPos(xSalvageJunk, ySalvageJunk)
+	bot_lib.clickPos(xSalvageJunk, ySalvageJunk)
 	sleep % zzz * 4
-	clickPos(xDestroyYes, yDestroyYes)
+	bot_lib.clickPos(xDestroyYes, yDestroyYes)
 	sleep % zzz * 2
 }
 
 buyAvailableUpgrades() {
 	global
-	clickPos(xBuy, yBuy)
+	bot_lib.clickPos(xBuy, yBuy)
 	sleep % zzz * 3
 }
 
 ; Move "gildCount" gilds to given ranger
 regild(ranger, gildCount) {
 	global
-	monsterClickerPause()
-	switchToCombatTab()
-	scrollToBottom()
+	bot_lib.monsterClickerPause()
+	bot_lib.switchToCombatTab()
+	bot_lib.scrollToBottom()
 
-	clickPos(xGilded, yGilded)
+	bot_lib.clickPos(xGilded, yGilded)
 	sleep % zzz * 2
 
 	ControlSend,, {shift down}, % winName
-	clickPos(rangerPositions[ranger].x, rangerPositions[ranger].y, gildCount)
+	bot_lib.clickPos(rangerPositions[ranger].x, rangerPositions[ranger].y, gildCount)
 	sleep % 1000 * gildCount/100*5
 	ControlSend,, {shift up}, % winName
 
-	clickPos(xGildedClose, yGildedClose)
+	bot_lib.clickPos(xGildedClose, yGildedClose)
 	sleep % zzz * 2
 }
 
@@ -712,7 +712,7 @@ toggleMode() {
 
 activateSkills(skills) {
 	global
-	clickPos(xHero, yHero) ; prevent fails
+	bot_lib.clickPos(xHero, yHero) ; prevent fails
 	loop,parse,skills,-
 	{
 		ControlSend,,% A_LoopField, % winName
@@ -732,7 +732,7 @@ stopMouseMonitoring() {
 handleScheduledReload(autorun := false) {
 	global
 	if(scheduleReload) {
-		showSplashAlways("Reloading bot...", 1)
+		bot_lib.showSplashAlways("Reloading bot...", 1)
 
 		autorun_flag := autorun = true ? "/autorun" : ""
 		Run "%A_AhkPath%" /restart "%A_ScriptFullPath%" %autorun_flag%
@@ -742,7 +742,7 @@ handleScheduledReload(autorun := false) {
 handleScheduledStop() {
 	global
 	if(scheduleStop) {
-		showSplashAlways("Scheduled stop. Exiting...")
+		bot_lib.showSplashAlways("Scheduled stop. Exiting...")
 		scheduleStop := false
 		exit
 	}
@@ -752,8 +752,8 @@ handleAutorun() {
 	global
 	param_1 = %1%
 	if(param_1 = "/autorun") {
-		showSplash("Autorun speedruns...", 1)
-		loopSpeedrun()
+		bot_lib.showSplash("Autorun speedruns...", 1)
+		bot_lib.loopSpeedrun()
 	}
 }
 
@@ -768,13 +768,13 @@ checkMousePosition:
 		WinActivate
 		MouseGetPos, x, y
 
-		xL := getAdjustedX(xSafetyZoneL)
-		xR := getAdjustedX(xSafetyZoneR)
-		yT := getAdjustedY(ySafetyZoneT)
-		yB := getAdjustedY(ySafetyZoneB)
+		xL := bot_lib.getAdjustedX(xSafetyZoneL)
+		xR := bot_lib.getAdjustedX(xSafetyZoneR)
+		yT := bot_lib.getAdjustedY(ySafetyZoneT)
+		yB := bot_lib.getAdjustedY(ySafetyZoneB)
 
 		if (x > xL && x < xR && y > yT && y < yB) {
-			playNotificationSound()
+			bot_lib.playNotificationSound()
 			msgbox,,% script,Click safety pause engaged. Continue?
 		}
 	}
