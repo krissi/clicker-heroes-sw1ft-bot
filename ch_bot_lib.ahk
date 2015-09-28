@@ -3,35 +3,15 @@
 ; by Sw1ftb
 ; -----------------------------------------------------------------------------------------
 
-class BotLib {
-	libVersion := 1.32
+#Include <Client>
 
-	winName := "Clicker Heroes"
+class ChBotLib {
+	libVersion := 1.32
 
 	;global ProgressBar, ProgressBarTime ; progress bar controls
 
 	exitThread := false
 	exitDRThread := false
-
-	chWinId := ""
-
-	; All the script coordinates are based on these four default dimensions.
-	chWidth := 1136
-	chHeight := 640
-	chMargin := 8
-	chTopMargin := 30
-
-	chTotalWidth := this.chWidth + this.chMargin * 2
-	chTotalHeight := this.chHeight + this.chMargin + this.chTopMargin
-
-	; Calculated
-	leftMarginOffset := 0
-	topMarginOffset := 0
-
-	; Calculated
-	aspectRatio := 1
-	hBorder := 0
-	vBorder := 0
 
 	zzz := 200 ; sleep delay (in ms) after a click
 	lvlUpDelay := 5 ; time (in seconds) between lvl up clicks
@@ -130,6 +110,11 @@ class BotLib {
 
 	xSave := 286
 	ySave := 112
+	
+	__New(gui) {
+		this.gui := gui
+		this.client := new Client(this.gui)
+	}
 
 	; -----------------------------------------------------------------------------------------
 	; -- Functions
@@ -148,79 +133,6 @@ class BotLib {
 		this.clickPos(873, 512)
 		this.clickPos(1005, 453)
 		this.clickPos(1053, 443)
-	}
-
-	clientCheck() {
-		global
-		WinGet, activeWinId, ID, A ; remember current active window...
-		if (A_TitleMatchMode = 3) {
-			this.calculateSteamAspectRatio() ; Steam
-		} else {
-			this.calculateBrowserOffsets() ; Browser
-			this.fullScreenOption := false
-		}
-		WinActivate, ahk_id %activeWinId% ; ... and restore focus back
-	}
-
-	calculateBrowserOffsets() {
-		global
-		;winName := Lvl.*Clicker Heroes.*
-		IfWinExist, % this.winName
-		{
-			this.showSplash("Calculating browser offsets...", 2, 0)
-			WinActivate
-			WinGetPos, x, y, w, h
-			WinGet, chWinId, ID, A
-
-			local leftMargin := (w - chWidth) // 2
-			leftMarginOffset := leftMargin - chMargin
-			topMarginOffset := browserTopMargin - chTopMargin
-		} else {
-			this.showWarningSplash("Clicker Heroes started in browser?")
-		}
-	}
-
-	calculateSteamAspectRatio() {
-		global
-		
-		IfWinExist, % this.winName
-		{
-			WinActivate
-			WinGetPos, x, y, w, h
-			WinGet, local_chWinId, ID, A
-			this.chWinId := local_chWinId
-			
-			; Fullscreen sanity checks
-			if (this.fullScreenOption) {
-				if (w <> A_ScreenWidth || h <> A_ScreenHeight) {
-					this.showWarningSplash("Set the fullScreenOption to false in the bot lib file.")
-					return
-				}
-			} else if (w = A_ScreenWidth && h = A_ScreenHeight) {
-				this.showWarningSplash("Set the fullScreenOption to true in the bot lib file.")
-				return
-			}
-
-			if (w != this.chTotalWidth || h != this.chTotalHeight) {
-				this.showSplash("Calculating Steam aspect ratio...", 2, 0)
-
-				local winWidth := this.fullScreenOption ? w : w - 2 * this.chMargin
-				local winHeight := this.fullScreenOption ? h : h - this.chTopMargin - this.chMargin
-				local horizontalAR := winWidth/this.chWidth
-				local verticalAR := winHeight/this.chHeight
-
-				; Take the lowest aspect ratio and calculate border size
-				if (horizontalAR < verticalAR) {
-					this.aspectRatio := horizontalAR
-					this.vBorder := (winHeight - this.chHeight * this.aspectRatio) // 2
-				} else {
-					this.aspectRatio := verticalAR
-					this.hBorder := (winWidth - this.chWidth * this.aspectRatio) // 2
-				}
-			}
-		} else {
-			this.showWarningSplash("Clicker Heroes started?")
-		}
 	}
 
 	switchToCombatTab() {
@@ -292,60 +204,7 @@ class BotLib {
 	}
 
 	clickPos(xCoord, yCoord, clickCount:=1) {
-		global
-		local xAdj := this.getAdjustedX(xCoord)
-		local yAdj := this.getAdjustedY(yCoord)
-		chWinId := this.chWinId
-		
-		ControlClick, x%xAdj% y%yAdj%, ahk_id %chWinId%,,, %clickCount%, NA
-	}
-
-	getAdjustedX(x) {
-		global
-		local leftMargin := this.fullScreenOption ? 0 : this.chMargin + this.leftMarginOffset
-		return round(this.aspectRatio*(x - this.chMargin) + leftMargin + this.hBorder)
-	}
-
-	getAdjustedY(y) {
-		global
-		local topMargin := this.fullScreenOption ? 0 : this.chTopMargin + this.topMarginOffset
-		return round(this.aspectRatio*(y - this.chTopMargin) + topMargin + this.vBorder)
-	}
-
-	playNotificationSound() {
-		if (playNotificationSounds) {
-			SoundPlay, %A_WinDir%\Media\Windows User Account Control.wav
-		}
-	}
-
-	playWarningSound() {
-		if (playWarningSounds) {
-			SoundPlay, %A_WinDir%\Media\tada.wav
-		}
-	}
-
-	showSplashAlways(text, seconds:=2) {
-		this.showSplash(text, seconds, 1, 1)
-	}
-
-	showWarningSplash(text, seconds:=5) {
-		this.showSplash(text, seconds, 2, 1)
-	}
-
-	showSplash(text, seconds:=2, sound:=1, showAlways:=0) {
-		global
-		if (seconds > 0) {
-			if (showSplashTexts or showAlways) {
-				progress,% "w" wSplash " x" xSplash " y" ySplash " zh0 fs10", %text%,,% script
-			}
-			if (sound = 1) {
-				this.playNotificationSound()
-			} else if (sound = 2) {
-				this.playWarningSound()
-			}
-			sleep % seconds * 1000
-			progress, off
-		}
+		this.client.clickPos(xCoord, yCoord, clickCount)
 	}
 
 	startProgress(title, min:=0, max:=100) {
@@ -387,7 +246,7 @@ class BotLib {
 	toggleFlag(flagName, byref flag) {
 		flag := !flag
 		flagValue := flag ? "On" : "Off"
-		this.showSplashAlways("Toggled " . flagName . " " . flagValue)
+		this.gui.showSplashAlways("Toggled " . flagName . " " . flagValue)
 	}
 
 	screenShot() {
@@ -401,8 +260,6 @@ class BotLib {
 		}
 	}
 }
-
-bot_lib := new BotLib()
 
 ; -----------------------------------------------------------------------------------------
 

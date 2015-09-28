@@ -7,8 +7,9 @@
 #NoEnv
 #InstallKeybdHook
 
-#Include %A_ScriptDir%
+#Include <Gui>
 #Include ch_bot_lib.ahk
+
 
 SetControlDelay, -1
 
@@ -17,6 +18,8 @@ scriptVersion=2.41
 minLibVersion=1.32
 
 script := scriptName . " v" . scriptVersion
+
+gui := new Gui(script)
 
 scheduleReload := false
 scheduleStop := false
@@ -34,8 +37,10 @@ IfNotExist, ch_bot_settings.ahk
 ; Load user settings
 #Include *i ch_bot_settings.ahk
 
+bot_lib := new ChBotLib(gui)
+
 if (bot_lib.libVersion != minLibVersion) {
-	bot_lib.showWarningSplash("The bot lib version must be " . minLibVersion . "!")
+	gui.showWarningSplash("The bot lib version must be " . minLibVersion . "!")
 	ExitApp
 }
 
@@ -43,12 +48,10 @@ if (useConfigurationAssistant) {
 	bot_lib.configurationAssistant()
 }
 
-bot_lib.clientCheck()
-
 if (deepRunClicks) {
 	Run, "%A_ScriptDir%\monster_clicker.ahk",, UseErrorLevel
 	if (ErrorLevel != 0) {
-		bot_lib.playWarningSound()
+		gui.playWarningSound()
     	msgbox,,% script,% "Failed to auto-start monster_clicker.ahk (system error code = " . A_LastError . ")!"
 	}
 }
@@ -75,7 +78,7 @@ return
 
 ; Abort speed/deep runs and auto ascensions with Alt+Pause
 !Pause::
-	bot_lib.showSplashAlways("Aborting...")
+	gui.showSplashAlways("Aborting...")
 	exitThread := true
 	exitDRThread := true
 return
@@ -142,19 +145,19 @@ return
 ; Set previous ranger as re-gild target
 ^F6::
 	reGildRanger := reGildRanger > rangers.MinIndex() ? reGildRanger-1 : reGildRanger
-	bot_lib.showSplashAlways("Re-gild ranger set to " . rangers[reGildRanger])
+	gui.showSplashAlways("Re-gild ranger set to " . rangers[reGildRanger])
 return
 
 ; Set next ranger as re-gild target
 ^F7::
 	reGildRanger := reGildRanger < rangers.MaxIndex() ? reGildRanger+1 : reGildRanger
-	bot_lib.showSplashAlways("Re-gild ranger set to " . rangers[reGildRanger])
+	gui.showSplashAlways("Re-gild ranger set to " . rangers[reGildRanger])
 return
 
 ; Move "reGildCount" gilds to the target ranger (will pause the monster clicker if running)
 ^F8::
 	critical
-	bot_lib.playNotificationSound()
+	gui.playNotificationSound()
 	msgbox, 4,% script,% "Move " . reGildCount . " gilds to " . rangers[reGildRanger] . "?"
 	ifmsgbox no
 		return
@@ -211,7 +214,7 @@ configurationAssistant() {
 	global
 
 	if (irisLevel < 145) {
-		bot_lib.playWarningSound()
+		gui.playWarningSound()
 		msgbox,,% script,% "Your Iris do not fulfill the minimum level requirement of 145 or higher!"
 		exit
 	}
@@ -250,7 +253,7 @@ configurationAssistant() {
 
 	if (irisLevel < optimalLevel - 1001) {
 		local levels := optimalLevel - 1001 - irisLevel
-		bot_lib.playNotificationSound()
+		gui.playNotificationSound()
 		msgbox,,% script,% "Your Iris is " . levels . " levels below the recommended ""optimal level - 1001"" rule."
 	}
 }
@@ -261,7 +264,7 @@ irisThreshold(lvl) {
 	local upperThreshold := lvl + 19
 	local lowerThreshold := lvl - 20
 	if (irisLevel >= lowerThreshold and irisLevel < upperThreshold) {
-		bot_lib.playWarningSound()
+		gui.playWarningSound()
 		msgbox,,% script,% "Threshold proximity warning! You should level up your Iris to " . upperThreshold . " or higher."
 	}
 	return irisLevel > lvl
@@ -303,25 +306,25 @@ loopSpeedRun() {
 	global
 
 	mode := hybridMode ? "hybrid" : "speed"
-	bot_lib.showSplashAlways("Starting " . mode . " runs...")
+	gui.showSplashAlways("Starting " . mode . " runs...")
 	loop
 	{
 		bot_lib.getClickable()
 		sleep % coinPickUpDelay * 1000
-		bot_lib.initRun()
+		initRun()
 		if (activateSkillsAtStart) {
-			bot_lib.activateSkills(speedRunStartCombo[2])
+			activateSkills(speedRunStartCombo[2])
 		}
-		bot_lib.speedRun()
+		speedRun()
 		if (hybridMode) {
-			bot_lib.deepRun()
+			deepRun()
 		}
 		if (saveBeforeAscending) {
-			bot_lib.save()
+			save()
 		}
-		bot_lib.ascend(autoAscend)
-		bot_lib.handleScheduledStop()
-		bot_lib.handleScheduledReload(true)
+		ascend(autoAscend)
+		handleScheduledStop()
+		handleScheduledReload(true)
 	}
 }
 
@@ -398,7 +401,7 @@ speedRun() {
 		return
 	}
 
-	bot_lib.showSplash("Starting speed run...")
+	gui.showSplash("Starting speed run...")
 
 	if (irisLevel < 2 * lMax + 10) ; Iris high enough to start with a ranger?
 	{
@@ -421,7 +424,7 @@ speedRun() {
 	}
 	bot_lib.lvlUp(lastStintTime, 1, lastStintButton, ++stint, stints)
 
-	bot_lib.showSplash("Speed run completed.")
+	gui.showSplash("Speed run completed.")
 }
 
 deepRun() {
@@ -433,7 +436,7 @@ deepRun() {
 	local button := gildedRanger = 9 ? 3 : 2 ; special case for Astraea
 	local y := yLvl + oLvl * (button - 1)
 
-	bot_lib.showSplash("Starting deep run...")
+	gui.showSplash("Starting deep run...")
 
 	bot_lib.startMouseMonitoring()
 	bot_lib.startProgress("Deep Run Progress", 0, drDuration // barUpdateDelay)
@@ -450,7 +453,7 @@ deepRun() {
 			bot_lib.monsterClickerOff()
 			bot_lib.stopProgress()
 			bot_lib.stopMouseMonitoring()
-			bot_lib.showSplashAlways("Deep run aborted!")
+			gui.showSplashAlways("Deep run aborted!")
 			exit
 		}
 		if (deepRunClicks) {
@@ -475,7 +478,7 @@ deepRun() {
 	bot_lib.stopProgress()
 	bot_lib.stopMouseMonitoring()
 
-	bot_lib.showSplash("Deep run ended.")
+	gui.showSplash("Deep run ended.")
 	sleep 1000
 }
 
@@ -523,7 +526,7 @@ lvlUp(seconds, buyUpgrades, button, stint, stints) {
 		if (exitThread) {
 			bot_lib.stopProgress()
 			bot_lib.stopMouseMonitoring()
-			bot_lib.showSplashAlways("Speed run aborted!")
+			gui.showSplashAlways("Speed run aborted!")
 			exit
 		}
 		if (mod(t, lvlUpDelay) = 0) {
@@ -613,15 +616,15 @@ ascend(autoYes:=false) {
 
 	if (autoYes) {
 		if (autoAscendDelay > 0) {
-			bot_lib.showWarningSplash(autoAscendDelay . " seconds till ASCENSION! (Abort with Alt+Pause)", autoAscendDelay)
+			gui.showWarningSplash(autoAscendDelay . " seconds till ASCENSION! (Abort with Alt+Pause)", autoAscendDelay)
 			if (exitThread) {
 				exitThread := false
-				bot_lib.showSplashAlways("Ascension aborted!")
+				gui.showSplashAlways("Ascension aborted!")
 				exit
 			}
 		}
 	} else {
-		bot_lib.playWarningSound()
+		gui.playWarningSound()
 		msgbox, 260,% script,Salvage Junk Pile & Ascend? ; default no
 		ifmsgbox no
 			exit
@@ -659,10 +662,10 @@ salvageJunkPile() {
 		}
 
 		if (displayRelicsDuration > 0) {
-			bot_lib.showWarningSplash("Salvaging junk in " . displayRelicsDuration . " seconds! (Abort with Alt+Pause)", displayRelicsDuration)
+			gui.showWarningSplash("Salvaging junk in " . displayRelicsDuration . " seconds! (Abort with Alt+Pause)", displayRelicsDuration)
 			if (exitThread) {
 				exitThread := false
-				bot_lib.showSplashAlways("Salvage aborted!")
+				gui.showSplashAlways("Salvage aborted!")
 				exit
 			}
 		}
@@ -732,7 +735,7 @@ stopMouseMonitoring() {
 handleScheduledReload(autorun := false) {
 	global
 	if(scheduleReload) {
-		bot_lib.showSplashAlways("Reloading bot...", 1)
+		gui.showSplashAlways("Reloading bot...", 1)
 
 		autorun_flag := autorun = true ? "/autorun" : ""
 		Run "%A_AhkPath%" /restart "%A_ScriptFullPath%" %autorun_flag%
@@ -742,7 +745,7 @@ handleScheduledReload(autorun := false) {
 handleScheduledStop() {
 	global
 	if(scheduleStop) {
-		bot_lib.showSplashAlways("Scheduled stop. Exiting...")
+		gui.showSplashAlways("Scheduled stop. Exiting...")
 		scheduleStop := false
 		exit
 	}
@@ -752,7 +755,7 @@ handleAutorun() {
 	global
 	param_1 = %1%
 	if(param_1 = "/autorun") {
-		bot_lib.showSplash("Autorun speedruns...", 1)
+		gui.showSplash("Autorun speedruns...", 1)
 		bot_lib.loopSpeedrun()
 	}
 }
@@ -774,7 +777,7 @@ checkMousePosition:
 		yB := bot_lib.getAdjustedY(ySafetyZoneB)
 
 		if (x > xL && x < xR && y > yT && y < yB) {
-			bot_lib.playNotificationSound()
+			gui.playNotificationSound()
 			msgbox,,% script,Click safety pause engaged. Continue?
 		}
 	}
