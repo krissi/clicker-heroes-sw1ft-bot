@@ -14,8 +14,12 @@ class AbstractConfiguration {
 		for idx, config in this.configurations {
 			value := config.getValue(this.section, setting)
 			
-			if (value != ConfigurationStore.setting_unreadable)
+			if (value != ConfigurationStore.setting_unreadable) {
+				if(value == "false") {
+					return false
+				}
 				return value
+			}
 		}
 			
 		throw "No value found for '" . setting . "' in '" . this.section . "'. Either your installation is broken or this is a bug"
