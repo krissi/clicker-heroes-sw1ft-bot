@@ -1,23 +1,17 @@
 class Gui {
-	playNotificationSounds := true
-	playWarningSounds := true
-	showSplashTexts := true
-	xSplash := 10
-	ySplash := 10
-	wSplash := 100
-	
-	__New(title) {
+	__New(title, configuration) {
 		this.title := title
+		this.configuration := configuration
 	}
 	
 	playNotificationSound() {
-		if (playNotificationSounds) {
+		if (this.configuration.playNotificationSounds()) {
 			SoundPlay, %A_WinDir%\Media\Windows User Account Control.wav
 		}
 	}
 
 	playWarningSound() {
-		if (this.playWarningSounds) {
+		if (this.configuration.playWarningSounds()) {
 			SoundPlay, %A_WinDir%\Media\tada.wav
 		}
 	}
@@ -31,16 +25,14 @@ class Gui {
 	}
 
 	showSplash(text, seconds:=2, sound:=1, showAlways:=0) {
-		global
-
 		if (seconds > 0) {
-			if (this.showSplashTexts or this.showAlways) {
-				progress,% "w" this.wSplash " x" this.xSplash " y" this.ySplash " zh0 fs10", %text%,,% this.title
+			if (this.configuration.showSplashTexts() or showAlways) {
+				progress,% "w" this.configuration.wSplash() " x" this.configuration.xSplash() " y" this.configuration.ySplash() " zh0 fs10", %text%,,% this.title
 			}
 			if (sound = 1) {
-				this.playNotificationSound()
+				this.configuration.playNotificationSounds()
 			} else if (sound = 2) {
-				this.playWarningSound()
+				this.configuration.playWarningSounds()
 			}
 			sleep % seconds * 1000
 			progress, off

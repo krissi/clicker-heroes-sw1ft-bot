@@ -2,4 +2,6 @@ ch_bot_lib_settings.ahk
 ch_bot_settings.ahk
 monster_clicker_settings.ahk
 *.bak
-/test.ahk
+/test*
+/user.ini
+/custom_configuration.ahk

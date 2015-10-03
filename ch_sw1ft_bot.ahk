@@ -19,7 +19,11 @@ minLibVersion=1.32
 
 script := scriptName . " v" . scriptVersion
 
-gui := new Gui(script)
+#Include <Configuration>
+
+configuration := new Configuration()
+
+gui := new Gui(script, configuration.gui)
 
 scheduleReload := false
 scheduleStop := false
