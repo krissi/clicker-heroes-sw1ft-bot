@@ -19,12 +19,6 @@ minLibVersion=1.32
 
 script := scriptName . " v" . scriptVersion
 
-#Include <Configuration>
-
-configuration := new Configuration()
-
-gui := new Gui(script, configuration.gui)
-
 scheduleReload := false
 scheduleStop := false
 
@@ -41,7 +35,7 @@ IfNotExist, ch_bot_settings.ahk
 ; Load user settings
 #Include *i ch_bot_settings.ahk
 
-bot_lib := new ChBotLib(gui)
+bot_lib := new ChBotLib(script)
 
 if (bot_lib.libVersion != minLibVersion) {
 	gui.showWarningSplash("The bot lib version must be " . minLibVersion . "!")
@@ -92,18 +86,18 @@ return
 ; Ctrl+Alt+F2 should switch to the relics tab and then back
 
 ^!F1::
-	bot_lib.scrollToBottom()
+	bot_lib.game.scrollToBottom()
 return
 
 ^!F2::
-	bot_lib.switchToRelicTab()
-	bot_lib.switchToCombatTab()
+	bot_lib.game.switchToRelicTab()
+	bot_lib.game.switchToCombatTab()
 return
 
 ; Alt+F1 to F4 are here to test the individual parts of the full speed run loop
 
 !F1::
-	bot_lib.getClickable()
+	bot_lib.game.getClickable()
 return
 
 !F2::
@@ -739,7 +733,7 @@ stopMouseMonitoring() {
 handleScheduledReload(autorun := false) {
 	global
 	if(scheduleReload) {
-		gui.showSplashAlways("Reloading bot...", 1)
+		bot_lib.gui.showSplashAlways("Reloading bot...", 1)
 
 		autorun_flag := autorun = true ? "/autorun" : ""
 		Run "%A_AhkPath%" /restart "%A_ScriptFullPath%" %autorun_flag%

@@ -3,7 +3,8 @@
 ; by Sw1ftb
 ; -----------------------------------------------------------------------------------------
 
-#Include <Client>
+#Include <Configuration>
+#Include <Game>
 
 class ChBotLib {
 	libVersion := 1.32
@@ -21,52 +22,7 @@ class ChBotLib {
 
 	dialogBoxClass := "#32770"
 
-	; -- Coordinates --------------------------------------------------------------------------
 
-	; Top LVL UP button when scrolled to the bottom
-	xLvl := 100
-	yLvl := 285
-	oLvl := 107 ; offset to next button
-
-	; Ascension button
-	xAsc := 310
-	yAsc := 434
-
-	buttonSize := 35
-
-	; Ascend Yes button
-	xYes := 500
-	yYes := 445
-
-	xCombatTab := 50
-	yCombatTab := 130
-
-	xAncientTab := 297
-	yAncientTab := 130
-
-	xRelicTab := 380
-	yRelicTab := 130
-
-	xRelic := 103
-	yRelic := 380
-
-	xSalvageJunk := 280
-	ySalvageJunk := 470
-
-	xDestroyYes := 500
-	yDestroyYes := 430
-
-	; Scrollbar
-	xScroll := 554
-	yUp := 219
-	yDown := 653
-	top2BottomClicks := 46
-
-	xGilded := 95
-	yGilded := 582
-
-	xGildedClose := 1090
-	yGildedClose := 54
 
 	rangers := ["Dread Knight", "Atlas", "Terra", "Phthalo", "Banana", "Lilin", "Cadmia", "Alabaster", "Astraea"]
 
@@ -92,9 +48,6 @@ class ChBotLib {
 	xHero := 474
 	yHero := 227
 
-	xMonster := 920
-	yMonster := 164
-
 	; Tab safety zone (script will pause when entering)
 	xSafetyZoneL := 8
 	xSafetyZoneR := 505
@@ -111,101 +64,18 @@ class ChBotLib {
 	xSave := 286
 	ySave := 112
 	
-	__New(gui) {
-		this.gui := gui
-		this.client := new Client(this.gui)
+	__New(script_name) {
+		configuration := new Configuration()
+
+		this.gui := new Gui(script_name, configuration.gui)
+		this.game := new Game(this.gui)
 	}
 
 	; -----------------------------------------------------------------------------------------
 	; -- Functions
 	; -----------------------------------------------------------------------------------------
 
-	; No smart image recognition, so we click'em all!
-	getClickable() {
-		global
-		; Break idle on purpose to get the same amount of gold every run
-		loop 3 {
-			this.clickPos(xMonster, yMonster)
-		}
-		this.clickPos(524, 487)
-		this.clickPos(747, 431)
-		this.clickPos(760, 380)
-		this.clickPos(873, 512)
-		this.clickPos(1005, 453)
-		this.clickPos(1053, 443)
-	}
 
-	switchToCombatTab() {
-		global
-		this.clickPos(this.xCombatTab, this.yCombatTab)
-		sleep % this.zzz * 4
-	}
-
-	switchToAncientTab() {
-		global
-		this.clickPos(this.xAncientTab, this.yAncientTab)
-		sleep % this.zzz * 2
-	}
-
-	switchToRelicTab() {
-		global
-		this.clickPos(this.xRelicTab, this.yRelicTab)
-		sleep % this.zzz * 2
-	}
-
-	scrollToTop() {
-		global
-		this.scrollUp(this.top2BottomClicks)
-		sleep 1000
-	}
-
-	scrollToBottom() {
-		global
-		this.scrollDown(this.top2BottomClicks)
-		sleep 1000
-	}
-
-	scrollUp(clickCount:=1) {
-		global
-		this.clickPos(this.xScroll, this.yUp, clickCount)
-		sleep % zzz * 2
-	}
-
-	scrollDown(clickCount:=1) {
-		global
-		this.clickPos(this.xScroll, this.yDown, clickCount)
-		sleep % this.zzz * 2
-	}
-
-	; Scroll down fix when at bottom and scroll bar don't update correctly
-	scrollWayDown(clickCount:=1) {
-		global
-		this.scrollUp()
-		this.scrollDown(clickCount + 1)
-		sleep % this.nextHeroDelay * 1000
-	}
-
-	maxClick(xCoord, yCoord, clickCount:=1) {
-		global
-		ControlSend,, {shift down}{q down}, % this.winName
-		this.clickPos(xCoord, yCoord, clickCount)
-		ControlSend,, {q up}{shift up}, % this.winName
-		sleep % zzz
-	}
-
-	ctrlClick(xCoord, yCoord, clickCount:=1, sleepSome:=1) {
-		global
-		ControlSend,, {ctrl down}, % this.winName
-		this.clickPos(xCoord, yCoord, clickCount)
-		ControlSend,, {ctrl up}, % this.winName
-		if (sleepSome) {
-			sleep % zzz
-		}
-	}
-
-	clickPos(xCoord, yCoord, clickCount:=1) {
-		this.client.clickPos(xCoord, yCoord, clickCount)
-	}
 
 	startProgress(title, min:=0, max:=100) {
 		global
@@ -249,16 +119,7 @@ class ChBotLib {
 		this.gui.showSplashAlways("Toggled " . flagName . " " . flagValue)
 	}
 
-	screenShot() {
-		global
-		if (A_TitleMatchMode = 3) { ; Steam only
-			WinGet, activeWinId, ID, A ; remember current active window...
-			WinActivate, % this.winName
-			send {f12 down}{f12 up} ; screenshot
-			sleep % zzz
-			WinActivate, ahk_id %activeWinId% ; ... and restore focus back
-		}
-	}
+
 }
 
 ; -----------------------------------------------------------------------------------------

@@ -100,9 +100,8 @@ class Client {
 	}
 	
 	clickPos(xCoord, yCoord, clickCount:=1) {
-		global
-		local xAdj := this.getAdjustedX(xCoord)
-		local yAdj := this.getAdjustedY(yCoord)
+		xAdj := this.getAdjustedX(xCoord)
+		yAdj := this.getAdjustedY(yCoord)
 		chWinId := this.chWinId
 		
 		ControlClick, x%xAdj% y%yAdj%, ahk_id %chWinId%,,, %clickCount%, NA

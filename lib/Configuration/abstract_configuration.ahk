@@ -1,13 +1,17 @@
 #Include <Configuration\Configuration_Store>
 
 class AbstractConfiguration {
-	__New() {
+	__New(configurations := false) {
 		if (this.section == "")
 			throw "No section defined"
 		
-		this.configurations := []
-		this.configurations.push(new ConfigurationStore("user.ini"))
-		this.configurations.push(new ConfigurationStore("default.ini"))
+		if(configurations) {
+			this.configurations := configurations
+		} else {
+			this.configurations := []
+			this.configurations.push(new ConfigurationStore("user.ini"))
+			this.configurations.push(new ConfigurationStore("default.ini"))
+		}
 	}
 	
 	getSetting(setting) {
@@ -22,7 +26,7 @@ class AbstractConfiguration {
 			}
 		}
 			
-		throw "No value found for '" . setting . "' in '" . this.section . "'. Either your installation is broken or this is a bug"
+		throw Exception("No value found for '" . setting . "' in '" . this.section . "'. Either your installation is broken or this is a bug", "SETTING_NOT_FOUND", [ this.section, setting ])
 	}
 	
 	__Call(method, args*) {
