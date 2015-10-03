@@ -106,17 +106,36 @@ class Client {
 		
 		ControlClick, x%xAdj% y%yAdj%, ahk_id %chWinId%,,, %clickCount%, NA
 	}
+	
+	maxClick(xCoord, yCoord, clickCount:=1) {
+		ControlSend,, {shift down}{q down}, % this.winName
+		this.clickPos(xCoord, yCoord, clickCount)
+		ControlSend,, {q up}{shift up}, % this.winName
+	}
+
+	ctrlClick(xCoord, yCoord, clickCount:=1) {
+		ControlSend,, {ctrl down}, % this.winName
+		this.clickPos(xCoord, yCoord, clickCount)
+		ControlSend,, {ctrl up}, % this.winName
+	}
 
 	getAdjustedX(x) {
-		global
-		local leftMargin := this.fullScreenOption ? 0 : this.chMargin + this.leftMarginOffset
+		leftMargin := this.fullScreenOption ? 0 : this.chMargin + this.leftMarginOffset
 		return round(this.aspectRatio*(x - this.chMargin) + leftMargin + this.hBorder)
 	}
 
 	getAdjustedY(y) {
-		global
-		local topMargin := this.fullScreenOption ? 0 : this.chTopMargin + this.topMarginOffset
+		topMargin := this.fullScreenOption ? 0 : this.chTopMargin + this.topMarginOffset
 		return round(this.aspectRatio*(y - this.chTopMargin) + topMargin + this.vBorder)
 	}
-
+	
+	screenShot() {
+		if (A_TitleMatchMode = 3) { ; Steam only
+			WinGet, activeWinId, ID, A ; remember current active window...
+			WinActivate, % this.winName
+			send {f12 down}{f12 up} ; screenshot
+			sleep % 200
+			WinActivate, ahk_id %activeWinId% ; ... and restore focus back
+		}
+	}
 }

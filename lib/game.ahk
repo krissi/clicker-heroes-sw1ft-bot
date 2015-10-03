@@ -38,13 +38,14 @@ class Game {
 	xGildedClose := 1090
 	yGildedClose := 54
 	
-	zzz := 200 ; sleep delay (in ms) after a click
-
-	__New(gui) {
+	__New(gui, configuration) {
 			this.gui := gui
 			this.client := new Client(this.gui)
+			this.configuration := configuration
 			this.coordinates := new CoordinateStore()
 	}
+	
+	; ------------------ Clickable -------------------------
 	
 	; No smart image recognition, so we click'em all!
 	getClickable() {
@@ -63,21 +64,25 @@ class Game {
 			}
 		}
 	}
+	
+	; -------------------- Tabs ---------------------------
 
 	switchToCombatTab() {
 		this.coordinates.combat_tab().click(this.client)
-		sleep % this.zzz * 4
+		this.delay(4)
 	}
 
 	switchToAncientTab() {
 		this.coordinates.ancient_tab().click(this.client)
-		sleep % this.zzz * 2
+		this.delay(2)
 	}
 
 	switchToRelicTab() {
 		this.coordinates.relic_tab().click(this.client)
-		sleep % this.zzz * 2
+		this.delay(2)
 	}
+	
+	; ------------------ Scrollbar -------------------------
 
 	scrollToTop() {
 		this.scrollUp(this.top2BottomClicks)
@@ -91,12 +96,12 @@ class Game {
 
 	scrollUp(clickCount:=1) {
 		this.coordinates.scrollbar_up_button().click(this.client, clickCount)
-		sleep % zzz * 2
+		this.delay(2)
 	}
 
 	scrollDown(clickCount:=1) {
 		this.coordinates.scrollbar_down_button().click(this.client, clickCount)
-		sleep % this.zzz * 2
+		this.delay(2)
 	}
 
 	; Scroll down fix when at bottom and scroll bar don't update correctly
@@ -105,37 +110,23 @@ class Game {
 		this.scrollDown(clickCount + 1)
 		sleep % this.nextHeroDelay * 1000
 	}
+	
+	; ---------------- Click Helpers -----------------------
 
 	maxClick(xCoord, yCoord, clickCount:=1) {
-		global
-		ControlSend,, {shift down}{q down}, % this.winName
-		this.clickPos(xCoord, yCoord, clickCount)
-		ControlSend,, {q up}{shift up}, % this.winName
-		sleep % zzz
+		this.client.maxClick(xCoord, yCoord, clickCount)
+		this.delay()
 	}
 
 	ctrlClick(xCoord, yCoord, clickCount:=1, sleepSome:=1) {
-		global
-		ControlSend,, {ctrl down}, % this.winName
-		this.clickPos(xCoord, yCoord, clickCount)
-		ControlSend,, {ctrl up}, % this.winName
-		if (sleepSome) {
-			sleep % zzz
-		}
-	}
+		this.client.ctrlClick(xCoord, yCoord, clickCount)
 
-	clickPos(xCoord, yCoord, clickCount:=1) {
-		this.client.clickPos(xCoord, yCoord, clickCount)
-	}
-	
-	screenShot() {
-		global
-		if (A_TitleMatchMode = 3) { ; Steam only
-			WinGet, activeWinId, ID, A ; remember current active window...
-			WinActivate, % this.winName
-			send {f12 down}{f12 up} ; screenshot
-			sleep % zzz
-			WinActivate, ahk_id %activeWinId% ; ... and restore focus back
+		if (sleepSome) {
+			this.delay()
 		}
+	}
+		
+	delay(factor := 1) {
+		this.configuration.zzz() * factor
 	}
 }

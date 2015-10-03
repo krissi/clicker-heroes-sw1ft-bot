@@ -7,4 +7,5 @@
 
 class Configuration {
 	gui := new CustomizableGuiConfiguration()
+	game := new CustomizableGameConfiguration()
 }

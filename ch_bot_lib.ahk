@@ -14,7 +14,6 @@ class ChBotLib {
 	exitThread := false
 	exitDRThread := false
 
-	zzz := 200 ; sleep delay (in ms) after a click
 	lvlUpDelay := 5 ; time (in seconds) between lvl up clicks
 	barUpdateDelay := 30 ; time (in seconds) between progress bar updates
 	coinPickUpDelay := 6 ; time (in seconds) needed to pick up all coins from a clickable
@@ -68,15 +67,12 @@ class ChBotLib {
 		configuration := new Configuration()
 
 		this.gui := new Gui(script_name, configuration.gui)
-		this.game := new Game(this.gui)
+		this.game := new Game(this.gui, configuration.game)
 	}
 
 	; -----------------------------------------------------------------------------------------
 	; -- Functions
 	; -----------------------------------------------------------------------------------------
-
-
-
 	startProgress(title, min:=0, max:=100) {
 		global
 		if (showProgressBar) {
