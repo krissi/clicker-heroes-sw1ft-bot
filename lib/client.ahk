@@ -21,8 +21,9 @@ class Client {
 	hBorder := 0
 	vBorder := 0
 
-	__New(gui) {
+	__New(gui, configuration) {
 		this.gui := gui
+		this.configuration := configuration.client
 		this.clientCheck()
 	}
 	
@@ -36,6 +37,20 @@ class Client {
 			this.fullScreenOption := false
 		}
 		WinActivate, ahk_id %activeWinId% ; ... and restore focus back
+	}
+	
+	hwnd() {
+		IfWinExist, % this.winName
+		{
+			WinGet, chWinId, ID, A
+			return chWinId
+		}
+	}
+	
+	pid() {
+		hwnd := this.hwnd()
+		WinGet, pid, PID, ahk_id %hwnd%
+		return pid
 	}
 	
 	calculateBrowserOffsets() {
@@ -137,5 +152,9 @@ class Client {
 			sleep % 200
 			WinActivate, ahk_id %activeWinId% ; ... and restore focus back
 		}
+	}
+	
+	getSettingsDialog(game) {
+		return new SettingsDialog(this, game.coordinates, this.configuration)
 	}
 }

@@ -9,6 +9,7 @@ class AbstractConfiguration {
 			this.configurations := configurations
 		} else {
 			this.configurations := []
+			this.configurations.push(new ConfigurationStore("status.ini"))
 			this.configurations.push(new ConfigurationStore("user.ini"))
 			this.configurations.push(new ConfigurationStore("default.ini"))
 			this.configurations.push(new ConfigurationStore("system.ini"))

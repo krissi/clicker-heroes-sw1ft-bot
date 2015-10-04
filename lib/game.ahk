@@ -1,4 +1,5 @@
 #Include <Client>
+#Include <Settings_Dialog>
 #Include <Coordinate_Store>
 
 class Game {
@@ -39,10 +40,11 @@ class Game {
 	yGildedClose := 54
 	
 	__New(gui, configuration) {
-			this.gui := gui
-			this.client := new Client(this.gui)
-			this.configuration := configuration
-			this.coordinates := new CoordinateStore()
+		this.full_configuration := configuration
+		this.gui := gui
+		this.client := new Client(this.gui, configuration)
+		this.configuration := configuration.game
+		this.coordinates := new CoordinateStore()
 	}
 	
 	; ------------------ Clickable -------------------------
@@ -109,6 +111,15 @@ class Game {
 		this.scrollUp()
 		this.scrollDown(clickCount + 1)
 		sleep % this.nextHeroDelay * 1000
+	}
+	
+	; ------------------- Buttons --------------------------
+	openSettingsDialog() {
+		settings_dialog := this.client.getSettingsDialog(this)
+		settings_dialog.open()
+		
+		this.delay(3)
+		return settings_dialog
 	}
 	
 	; ---------------- Click Helpers -----------------------

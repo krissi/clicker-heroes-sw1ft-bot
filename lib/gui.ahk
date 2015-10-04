@@ -1,7 +1,7 @@
 class Gui {
 	__New(title, configuration) {
 		this.title := title
-		this.configuration := configuration
+		this.configuration := configuration.gui
 	}
 	
 	playNotificationSound() {
