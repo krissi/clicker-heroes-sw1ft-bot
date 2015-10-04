@@ -202,6 +202,8 @@ class Bot {
 	ySafetyZoneB := 154
 
 	__New(script_name) {
+		this.tempFiles := []
+
 		configuration := new Configuration()
 
 		this.configuration := configuration.bot
@@ -213,198 +215,33 @@ class Bot {
 		}
 	}
 
-	; Automatically configure initDownClicks and yLvlInit settings.
-	configurationAssistant() {
-		irisLevel := this.configuration.irisLevel()
-		optimalLevel := this.configuration.optimalLevel()
-		
-		if (irisLevel < 145) {
-			this.gui.playWarningSound()
-			msgbox,,% script,% "Your Iris do not fulfill the minimum level requirement of 145 or higher!"
-			exit
-		}
-
-		if (this.irisThreshold(2010)) { ; Astraea
-			initDownClicks := [6,5,6,5,6,3]
-			yLvlInit := 241
-		} else if (this.irisThreshold(1760)) { ; Alabaster
-			; [6,6,6,5,6,3], 227
-			; [6,5,6,6,6,3], 260
-			; [5,6,6,5,6,3], 293
-			initDownClicks := [6,6,6,5,6,3]
-			yLvlInit := 227
-		} else if (this.irisThreshold(1510)) { ; Cadmia
-			initDownClicks := [6,6,6,6,6,3]
-			yLvlInit := 240
-		} else if (this.irisThreshold(1260)) { ; Lilin
-			initDownClicks := [6,6,6,6,6,3]
-			yLvlInit := 285
-		} else if (this.irisThreshold(1010)) { ; Banana
-			initDownClicks := [6,7,6,7,6,3]
-			yLvlInit := 240
-		} else if (this.irisThreshold(760)) { ; Phthalo
-			initDownClicks := [6,7,7,6,7,3]
-			yLvlInit := 273
-		} else if (this.irisThreshold(510)) { ; Terra
-			initDownClicks := [7,7,7,7,7,3]
-			yLvlInit := 240
-		} else if (this.irisThreshold(260)) { ; Atlas
-			initDownClicks := [7,7,7,8,7,3]
-			yLvlInit := 273
-		} else { ; Dread Knight
-			initDownClicks := [7,8,7,8,7,4]
-			yLvlInit := 257
-		}
-
-		if (irisLevel < optimalLevel - 1001) {
-			levels := optimalLevel - 1001 - irisLevel
-			this.gui.playNotificationSound()
-			msgbox,,% script,% "Your Iris is " . levels . " levels below the recommended ""optimal level - 1001"" rule."
-		}
+	__Delete() {
+		this.cleanupTempfiles()
 	}
 
-	; Check if Iris is within a certain threshold that can cause a toggling behaviour between different settings
-	irisThreshold(lvl) {
-		irisLevel := this.configuration.irisLevel()
-		optimalLevel := this.configuration.optimalLevel()
-		
-		upperThreshold := lvl + 19
-		lowerThreshold := lvl - 20
-		if (irisLevel >= lowerThreshold and irisLevel < upperThreshold) {
-			this.gui.playWarningSound()
-			msgbox,,% script,% "Threshold proximity warning! You should level up your Iris to " . upperThreshold . " or higher."
-		}
-		return irisLevel > lvl
-	}
-	
-	monsterClickerOn(isActive:=true) {
-		global
-		if (deepRunClicks) {
-			send {shift down}{f1 down}{f1 up}{shift up}
-		}
-	}
-
-	monsterClickerPause() {
-		global
-		if (deepRunClicks) {
-			send {shift down}{f2 down}{f2 up}{shift up}
-		}
-	}
-
-	monsterClickerOff() {
-		global
-		if (deepRunClicks) {
-			send {shift down}{f3 down}{f3 up}{shift up}
-		}
-	}
-
-	lvlUp(seconds, buyUpgrades, button, stint, stints) {
-		global
-
-		exitThread := false
-		local y := yLvl + oLvl * (button - 1)
-		local title := "Speed Run Progress (" . stint . "/" . stints . ")"
-
-		bot_lib.startMouseMonitoring()
-		bot_lib.startProgress(title, 0, seconds // barUpdateDelay)
-
-		if (buyUpgrades) {
-			bot_lib.ctrlClick(xLvl, y)
-			bot_lib.buyAvailableUpgrades()
-		}
-		bot_lib.maxClick(xLvl, y)
-
-		local t := 0
-
-		loop % seconds
-		{
-			if (exitThread) {
-				bot_lib.stopProgress()
-				bot_lib.stopMouseMonitoring()
-				gui.showSplashAlways("Speed run aborted!")
-				exit
-			}
-			if (mod(t, lvlUpDelay) = 0) {
-				bot_lib.ctrlClick(xLvl, y)
-			}
-			t += 1
-			bot_lib.updateProgress(t // barUpdateDelay, seconds - t)
-			sleep 1000
-		}
-		bot_lib.stopProgress()
-		bot_lib.stopMouseMonitoring()
-	}
-
-	openSaveDialog() {
-		settings_dialog := this.game.openSettingsDialog()
-		settings_dialog.openSaveDialog()
-		this.game.delay(10)
-		
-		return settings_dialog
-	}
-
-	save() {
+	; ===================================================================
+	; ======================== Public Interface =========================
+	; ===================================================================
+	saveGame() {
 		fileName := "savegames\ch" . A_NowUTC . ".txt"
 		
 		savegame :=	this.getSavegame()
 		this.writeFile(fileName, savegame)
 	}
-	
-	getSavegame() {
-		OriginalClipboard := ClipboardAll
-		Clipboard =
-		
-		settings_dialog := this.openSaveDialog()
-		
-		ClipWait
-		savegame := Clipboard
-		
-		this.game.delay(4)
-		settings_dialog.closeSaveDialog()
-		
-		Clipboard := OriginalClipboard
-		OriginalClipboard =
-		
-		settings_dialog.close()
-		return savegame
-	}
-	
-	writeFile(filename, contents) {
-		FileDelete, %filename%
-		FileAppend, %contents%, %filename%
-	}
 
 	openAncientsOptimizer() {
-		global
-
-		local templateFileName := "system\ancients_optimizer_loader.html"
+		templateFileName := "system\ancients_optimizer_loader.html"
 		FileRead, loaderSourceTemplate, %templateFileName%
 
-		local loaderFileName := A_Temp . "\ch_ao_" . A_NowUTC . ".html"
-		local file = bot_lib.FileOpen(loaderFileName, "w")
-		if !bot_lib.IsObject(file)
-		{
-			MsgBox % "Can't open " . loaderFileName . " for writing."
-			return
-		}
+		loaderFileName := A_Temp . "\ch_ao_" . A_NowUTC . ".html"
 
-		bot_lib.openSaveDialog()
+		savegame :=	this.getSavegame()
+		loaderSource := StrReplace(loaderSourceTemplate, "#####SAVEGAME#####", savegame)
 
-		; Abort saving. Clipboard is good enough
-		ControlSend,, {esc}, ahk_class %dialogBoxClass%
-
-		sleep % zzz * 3
-		bot_lib.clickPos(xSettingsClose, ySettingsClose)
-
-		; Write loader file
-		local loaderSource := bot_lib.StrReplace(loaderSourceTemplate, "#####SAVEGAME#####", Clipboard)
-
-		file.bot_lib.write(loaderSource)
-		file.bot_lib.Close()
+		this.tempFiles.Push(loaderFileName)
+		this.writeFile(loaderFileName, loaderSource)
 
 		Run, %loaderFileName%
-		sleep % zzz * 5
-		FileDelete, %loaderFileName%
 	}
 
 	ascend(autoYes:=false) {
@@ -523,10 +360,133 @@ class Bot {
 		sleep 1000
 	}
 
+	toggleFlag(flagName, byref flag) {
+		flag := !flag
+		flagValue := flag ? "On" : "Off"
+		this.gui.showSplashAlways("Toggled " . flagName . " " . flagValue)
+	}
 
+	; ===================================================================
+	; ======================== Private Interface ========================
+	; ===================================================================
+
+	; Automatically configure initDownClicks and yLvlInit settings.
+	configurationAssistant() {
+		irisLevel := this.configuration.irisLevel()
+		optimalLevel := this.configuration.optimalLevel()
+		
+		if (irisLevel < 145) {
+			this.gui.playWarningSound()
+			msgbox,,% script,% "Your Iris do not fulfill the minimum level requirement of 145 or higher!"
+			exit
+		}
+
+		if (this.irisThreshold(2010)) { ; Astraea
+			initDownClicks := [6,5,6,5,6,3]
+			yLvlInit := 241
+		} else if (this.irisThreshold(1760)) { ; Alabaster
+			; [6,6,6,5,6,3], 227
+			; [6,5,6,6,6,3], 260
+			; [5,6,6,5,6,3], 293
+			initDownClicks := [6,6,6,5,6,3]
+			yLvlInit := 227
+		} else if (this.irisThreshold(1510)) { ; Cadmia
+			initDownClicks := [6,6,6,6,6,3]
+			yLvlInit := 240
+		} else if (this.irisThreshold(1260)) { ; Lilin
+			initDownClicks := [6,6,6,6,6,3]
+			yLvlInit := 285
+		} else if (this.irisThreshold(1010)) { ; Banana
+			initDownClicks := [6,7,6,7,6,3]
+			yLvlInit := 240
+		} else if (this.irisThreshold(760)) { ; Phthalo
+			initDownClicks := [6,7,7,6,7,3]
+			yLvlInit := 273
+		} else if (this.irisThreshold(510)) { ; Terra
+			initDownClicks := [7,7,7,7,7,3]
+			yLvlInit := 240
+		} else if (this.irisThreshold(260)) { ; Atlas
+			initDownClicks := [7,7,7,8,7,3]
+			yLvlInit := 273
+		} else { ; Dread Knight
+			initDownClicks := [7,8,7,8,7,4]
+			yLvlInit := 257
+		}
+
+		if (irisLevel < optimalLevel - 1001) {
+			levels := optimalLevel - 1001 - irisLevel
+			this.gui.playNotificationSound()
+			msgbox,,% script,% "Your Iris is " . levels . " levels below the recommended ""optimal level - 1001"" rule."
+		}
+	}
+
+	; Check if Iris is within a certain threshold that can cause a toggling behaviour between different settings
+	irisThreshold(lvl) {
+		irisLevel := this.configuration.irisLevel()
+		optimalLevel := this.configuration.optimalLevel()
+		
+		upperThreshold := lvl + 19
+		lowerThreshold := lvl - 20
+		if (irisLevel >= lowerThreshold and irisLevel < upperThreshold) {
+			this.gui.playWarningSound()
+			msgbox,,% script,% "Threshold proximity warning! You should level up your Iris to " . upperThreshold . " or higher."
+		}
+		return irisLevel > lvl
+	}
 	
+	monsterClickerOn(isActive:=true) {
+		global
+		if (deepRunClicks) {
+			send {shift down}{f1 down}{f1 up}{shift up}
+		}
+	}
+
+	monsterClickerPause() {
+		global
+		if (deepRunClicks) {
+			send {shift down}{f2 down}{f2 up}{shift up}
+		}
+	}
+
+	monsterClickerOff() {
+		global
+		if (deepRunClicks) {
+			send {shift down}{f3 down}{f3 up}{shift up}
+		}
+	}
+
+	openSaveDialog() {
+		settings_dialog := this.game.openSettingsDialog()
+		settings_dialog.openSaveDialog()
+		this.game.delay(10)
+		
+		return settings_dialog
+	}
+
+	getSavegame() {
+		OriginalClipboard := ClipboardAll
+		Clipboard =
+		
+		settings_dialog := this.openSaveDialog()
+		
+		ClipWait
+		savegame := Clipboard
+		
+		this.game.delay(4)
+		settings_dialog.closeSaveDialog()
+		
+		Clipboard := OriginalClipboard
+		OriginalClipboard =
+		
+		settings_dialog.close()
+		return savegame
+	}
 	
-	
+	writeFile(filename, contents) {
+		FileDelete, %filename%
+		FileAppend, %contents%, %filename%
+	}
+
 
 	; -----------------------------------------------------------------------------------------
 	; -- Functions
@@ -567,11 +527,8 @@ class Bot {
 		return (A_TickCount - startTime) // 1000
 	}
 
-	toggleFlag(flagName, byref flag) {
-		flag := !flag
-		flagValue := flag ? "On" : "Off"
-		this.gui.showSplashAlways("Toggled " . flagName . " " . flagValue)
+	cleanupTempfiles() {
+		for idx, filename in this.tempFiles
+			FileDelete, %filename%
 	}
-
-
 }

@@ -399,6 +399,44 @@ deepRun() {
 	sleep 1000
 }
 
+
+lvlUp(seconds, buyUpgrades, button, stint, stints) {
+	global
+
+	exitThread := false
+	local y := yLvl + oLvl * (button - 1)
+	local title := "Speed Run Progress (" . stint . "/" . stints . ")"
+
+	bot_lib.startMouseMonitoring()
+	bot_lib.startProgress(title, 0, seconds // barUpdateDelay)
+
+	if (buyUpgrades) {
+		bot_lib.ctrlClick(xLvl, y)
+		bot_lib.buyAvailableUpgrades()
+	}
+	bot_lib.maxClick(xLvl, y)
+
+	local t := 0
+
+	loop % seconds
+	{
+		if (exitThread) {
+			bot_lib.stopProgress()
+			bot_lib.stopMouseMonitoring()
+			gui.showSplashAlways("Speed run aborted!")
+			exit
+		}
+		if (mod(t, lvlUpDelay) = 0) {
+			bot_lib.ctrlClick(xLvl, y)
+		}
+		t += 1
+		bot_lib.updateProgress(t // barUpdateDelay, seconds - t)
+		sleep 1000
+	}
+	bot_lib.stopProgress()
+	bot_lib.stopMouseMonitoring()
+}
+
 startMouseMonitoring() {
 	setTimer, checkMousePosition, 250
 }

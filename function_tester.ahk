@@ -48,53 +48,41 @@ return
 	game.scrollToBottom()
 return
 
-^F8::
-	game.openSettingsDialog()
-return
-
-^F9::
-	game.closeSettingsDialog()
-return
-
 ; Quick tests for <Bot> (Alt):
 !F1::
-	bot.openSaveDialog()
+	bot.saveGame()
 return
 
 !F2::
-	bot.save()
-return
-
-!F3::
-	bot.lvlUp()
-return
-
-!F4::
 	bot.openAncientsOptimizer()
 return
 
-!F5::
+!F3::
 	bot.ascend()
 return
 
-!F6::
+!F4::
 	bot.salvageJunkPile()
 return
 
-!F7::
+!F5::
 	bot.buyAvailableUpgrades()
 return
 
-!F8::
+!F6::
 	bot.regild()
 return
 
-!F9::
+!F7::
 	bot.toggleMode()
 return
 
-!F10::
+!F8::
 	bot.activateSkills()
+return
+
+!F9::
+	bot.toggleFlag()
 return
 
 ; Quick tests smaller classes (<SettingsDialog>, ...) (Shift):

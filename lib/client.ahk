@@ -1,8 +1,4 @@
 class Client {
-	winName := "Clicker Heroes"
-	
-	chWinId := ""
-
 	; All the script coordinates are based on these four default dimensions.
 	chWidth := 1136
 	chHeight := 640
@@ -39,12 +35,24 @@ class Client {
 		WinActivate, ahk_id %activeWinId% ; ... and restore focus back
 	}
 	
-	hwnd() {
-		IfWinExist, % this.winName
+	chWinId() {
+		IfWinExist, % this.configuration.windowName()
 		{
-			WinGet, chWinId, ID, A
+			WinGet, chWinId, ID
 			return chWinId
 		}
+
+		throw "Cannot get HWND"
+	}
+
+	updateClientPosition() {
+		hwnd := this.chWinId()
+		WinGetPos, x, y, w, h, ahk_id %hwnd%
+
+		this.client_x := x
+		this.client_y := y
+		this.client_w := w
+		this.client_h := h
 	}
 	
 	pid() {
@@ -54,70 +62,53 @@ class Client {
 	}
 	
 	calculateBrowserOffsets() {
-		global
-		;winName := Lvl.*Clicker Heroes.*
-		IfWinExist, % this.winName
-		{
-			this.gui.showSplash("Calculating browser offsets...", 2, 0)
-			WinActivate
-			WinGetPos, x, y, w, h
-			WinGet, chWinId, ID, A
+		MsgBox % "todo"
 
-			local leftMargin := (w - chWidth) // 2
-			leftMarginOffset := leftMargin - chMargin
-			topMarginOffset := browserTopMargin - chTopMargin
-		} else {
-			this.gui.showWarningSplash("Clicker Heroes started in browser?")
-		}
+		this.updateClientPosition()
+		this.gui.showSplash("Calculating browser offsets...", 2, 0)
+
+		leftMargin := (this.w - this.chWidth) // 2
+		leftMarginOffset := this.leftMargin - this.chMargin
+		topMarginOffset := this.browserTopMargin - this.chTopMargin
 	}
 
 	calculateSteamAspectRatio() {
-		global
-		
-		IfWinExist, % this.winName
-		{
-			WinActivate
-			WinGetPos, x, y, w, h
-			WinGet, local_chWinId, ID, A
-			this.chWinId := local_chWinId
-			
-			; Fullscreen sanity checks
-			if (this.fullScreenOption) {
-				if (w <> A_ScreenWidth || h <> A_ScreenHeight) {
-					this.gui.showWarningSplash("Set the fullScreenOption to false in the bot lib file.")
-					return
-				}
-			} else if (w = A_ScreenWidth && h = A_ScreenHeight) {
-				this.gui.showWarningSplash("Set the fullScreenOption to true in the bot lib file.")
+		this.updateClientPosition()
+
+		; Fullscreen sanity checks
+		if (this.fullScreenOption) {
+			if (this.client_w <> A_ScreenWidth || this.client_h <> A_ScreenHeight) {
+				this.gui.showWarningSplash("Set the fullScreenOption to false in the bot lib file.")
 				return
 			}
+		} else if (this.client_w = A_ScreenWidth && this.client_h = A_ScreenHeight) {
+			this.gui.showWarningSplash("Set the fullScreenOption to true in the bot lib file.")
+			return
+		}
 
-			if (w != this.chTotalWidth || h != this.chTotalHeight) {
-				this.gui.showSplash("Calculating Steam aspect ratio...", 2, 0)
+		if (this.w != this.chTotalWidth || this.h != this.chTotalHeight) {
+			this.gui.showSplash("Calculating Steam aspect ratio...", 2, 0)
 
-				local winWidth := this.fullScreenOption ? w : w - 2 * this.chMargin
-				local winHeight := this.fullScreenOption ? h : h - this.chTopMargin - this.chMargin
-				local horizontalAR := winWidth/this.chWidth
-				local verticalAR := winHeight/this.chHeight
+			winWidth := this.fullScreenOption ? this.client_w : this.client_w - 2 * this.chMargin
+			winHeight := this.fullScreenOption ? this.client_h : this.client_h - this.chTopMargin - this.chMargin
+			horizontalAR := winWidth/this.chWidth
+			verticalAR := winHeight/this.chHeight
 
-				; Take the lowest aspect ratio and calculate border size
-				if (horizontalAR < verticalAR) {
-					this.aspectRatio := horizontalAR
-					this.vBorder := (winHeight - this.chHeight * this.aspectRatio) // 2
-				} else {
-					this.aspectRatio := verticalAR
-					this.hBorder := (winWidth - this.chWidth * this.aspectRatio) // 2
-				}
+			; Take the lowest aspect ratio and calculate border size
+			if (horizontalAR < verticalAR) {
+				this.aspectRatio := horizontalAR
+				this.vBorder := (winHeight - this.chHeight * this.aspectRatio) // 2
+			} else {
+				this.aspectRatio := verticalAR
+				this.hBorder := (winWidth - this.chWidth * this.aspectRatio) // 2
 			}
-		} else {
-			this.gui.showWarningSplash("Clicker Heroes started?")
 		}
 	}
 	
 	clickPos(xCoord, yCoord, clickCount:=1) {
 		xAdj := this.getAdjustedX(xCoord)
 		yAdj := this.getAdjustedY(yCoord)
-		chWinId := this.chWinId
+		chWinId := this.chWinId()
 		
 		ControlClick, x%xAdj% y%yAdj%, ahk_id %chWinId%,,, %clickCount%, NA
 	}

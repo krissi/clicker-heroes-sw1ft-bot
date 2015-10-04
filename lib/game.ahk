@@ -1,4 +1,4 @@
-#Include <Client>
+#Include <Debug_Client>
 #Include <Settings_Dialog>
 #Include <Coordinate_Store>
 
@@ -42,7 +42,7 @@ class Game {
 	__New(gui, configuration) {
 		this.full_configuration := configuration
 		this.gui := gui
-		this.client := new Client(this.gui, configuration)
+		this.client := new DebugClient(this.gui, configuration)
 		this.configuration := configuration.game
 		this.coordinates := new CoordinateStore()
 	}
