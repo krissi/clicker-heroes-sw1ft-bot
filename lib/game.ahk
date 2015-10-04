@@ -20,15 +20,6 @@ class Game {
 	xYes := 500
 	yYes := 445
 
-	xRelic := 103
-	yRelic := 380
-
-	xSalvageJunk := 280
-	ySalvageJunk := 470
-
-	xDestroyYes := 500
-	yDestroyYes := 430
-
 	; Scrollbar
 
 	top2BottomClicks := 46
@@ -47,7 +38,7 @@ class Game {
 		this.coordinates := new CoordinateStore()
 	}
 	
-	; ------------------ Clickable -------------------------
+	; --------------- Game Elements ----------------------
 	
 	; No smart image recognition, so we click'em all!
 	getClickable() {
@@ -65,6 +56,11 @@ class Game {
 				}
 			}
 		}
+	}
+
+	clickRelic() {
+		this.coordinates.relic().click(this.client)
+		this.delay(4)
 	}
 	
 	; -------------------- Tabs ---------------------------
@@ -121,6 +117,22 @@ class Game {
 		this.delay(3)
 		return settings_dialog
 	}
+
+	openSalvageJunkPileDialog() {
+		this.coordinates.salvageJunkButton().click(this.client)
+		this.delay(4)
+
+		destroy_coordinate := this.coordinates.salvageJunkDialogDestroyButton()
+		destroy_func := destroy_coordinate.click.bind(destroy_coordinate, this.client)
+
+		dialog := Object("confirm_destroy", destroy_func)
+
+		return dialog 
+	}
+
+	screenShot() {
+		this.client.screenShot()
+	}
 	
 	; ---------------- Click Helpers -----------------------
 
@@ -138,6 +150,6 @@ class Game {
 	}
 		
 	delay(factor := 1) {
-		this.configuration.zzz() * factor
+		sleep % this.configuration.zzz() * factor
 	}
 }

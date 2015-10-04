@@ -5,6 +5,7 @@
 
 #Include <Configuration>
 #Include <Game>
+#Include <Gui>
 
 class Bot {
 	;global ProgressBar, ProgressBarTime ; progress bar controls
@@ -58,18 +59,8 @@ class Bot {
 
 	ascDownClicks := 26 ; # of down clicks needed to get the ascension button center:ish (after a full speed run)
 
-	autoAscend := false ; Warning! Set to true will both salvage relics and ascend without any user intervention!
 
-	; Auto Ascend Warning Mode
-	; The following two settings may replace each other or can both be used.
-	; Set to 0 to disable completely
-	autoAscendDelay := 10 ; warning timer (in seconds) before ascending
-	displayRelicsDuration := 10 ; warning timer (in seconds) before salvaging the junk pile
 
-	; If you run the Steam client with autoAscend, you can screenshot every relic you salvage!
-	screenShotRelics := false
-
-	saveBeforeAscending := false ; autosave the game
 
 	debug := false ; when set to "true", you can press Alt+F3 to show some debug info (also copied into your clipboard)
 
@@ -87,10 +78,6 @@ class Bot {
 	deepRunClicks := true ; click the monster during a deep run?
 
 	; -- Init run -----------------------------------------------------------------------------
-
-	; The assistant will automatically try to set the correct initDownClicks and yLvlInit settings.
-	; It will also assist with Iris level recommendations.
-	useConfigurationAssistant := true
 
 	; A list of clicks needed to scroll down 4 heroes at a time, starting from the top.
 	initDownClicks := [0,0,0,0,0,0]
@@ -284,37 +271,27 @@ class Bot {
 	}
 
 	salvageJunkPile() {
-		global
+		this.game.switchToRelicTab()
 
-		bot_lib.switchToRelicTab()
-
-		if (autoAscend) {
-			if (screenShotRelics || displayRelicsDuration > 0) {
-				bot_lib.clickPos(xRelic, yRelic) ; focus
-			}
-
-			if (screenShotRelics) {
-				bot_lib.screenShot()
-			}
-
-			if (displayRelicsDuration > 0) {
-				gui.showWarningSplash("Salvaging junk in " . displayRelicsDuration . " seconds! (Abort with Alt+Pause)", displayRelicsDuration)
-				if (exitThread) {
-					exitThread := false
-					gui.showSplashAlways("Salvage aborted!")
-					exit
-				}
-			}
-
-			if (screenShotRelics || displayRelicsDuration > 0) {
-				bot_lib.clickPos(xRelic+100, yRelic) ; remove focus
-			}
+		focusRelic := this.configuration.screenShotRelics() || this.configuration.displayRelicsDuration() > 0
+		if (focusRelic) {
+			this.game.clickRelic()
 		}
 
-		bot_lib.clickPos(xSalvageJunk, ySalvageJunk)
-		sleep % zzz * 4
-		bot_lib.clickPos(xDestroyYes, yDestroyYes)
-		sleep % zzz * 2
+		if (this.configuration.screenShotRelics()) {
+			this.game.screenShot()
+		}
+
+		if (! this.gui.userDoesAllow("Salvaging junk in " . this.configuration.displayRelicsDuration() . " seconds! (Abort with Alt+Pause)", this.configuration.displayRelicsDuration())) {
+			this.gui.showSplashAlways("Salvage aborted!")
+			exit
+		}
+
+		dialog := this.game.openSalvageJunkPileDialog()
+		this.game.delay(4)
+
+		dialog.confirm_destroy()
+		this.game.delay(2)
 	}
 
 	buyAvailableUpgrades() {

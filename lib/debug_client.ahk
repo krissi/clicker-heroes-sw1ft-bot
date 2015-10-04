@@ -27,12 +27,12 @@ class DebugClient extends Client {
 		client_h := this.client_h
 		windowColor := this.windowColor
 
-		Gui, Color, %windowColor%
-		Gui +LastFound +AlwaysOnTop +ToolWindow
+		Gui, DebugClient:Color, %windowColor%
+		Gui DebugClient:+LastFound +AlwaysOnTop +ToolWindow
 		WinSet, Transparent, 150
 		WinSet, ExStyle, +0x20
-		Gui -Caption
-		Gui, Show, w%client_w% h%client_h% x%client_x% y%client_y%, CH Debug Client
+		Gui DebugClient:-Caption
+		Gui, DebugClient:Show, w%client_w% h%client_h% x%client_x% y%client_y%, CH Debug Client
 
 		Process, Exist
 		WinGet, canvasHwnd, ID, %p_title% ahk_class AutoHotkeyGUI ahk_pid %ErrorLevel%
@@ -48,7 +48,7 @@ class DebugClient extends Client {
 		else
 			this.dots.push([A_TickCount, p_x, p_y])
 
-		Gui, Add, Progress, % "x" ( p_x-1 ) " y" ( p_y-1 ) " w" ( p_size+2 ) " h" ( p_size+2 ) " background" p_color
+		Gui, DebugClient:Add, Progress, % "x" ( p_x-1 ) " y" ( p_y-1 ) " w" ( p_size+2 ) " h" ( p_size+2 ) " background" p_color
 		
 		canvasHwnd := this.canvasHwnd
 
