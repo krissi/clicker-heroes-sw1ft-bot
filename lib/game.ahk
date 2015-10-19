@@ -4,17 +4,6 @@
 
 class Game {
 	; -- Coordinates --------------------------------------------------------------------------
-
-	; Ascension button
-	xAsc := 310
-	yAsc := 434
-
-	buttonSize := 35
-
-	; Ascend Yes button
-	xYes := 500
-	yYes := 445
-
 	; Scrollbar
 
 	top2BottomClicks := 46

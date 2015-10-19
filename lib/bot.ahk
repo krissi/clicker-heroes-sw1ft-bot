@@ -57,10 +57,6 @@ class Bot {
 
 	hybridMode := false ; chain a deep run when the speed run finish
 
-	ascDownClicks := 26 ; # of down clicks needed to get the ascension button center:ish (after a full speed run)
-
-
-
 
 	debug := false ; when set to "true", you can press Alt+F3 to show some debug info (also copied into your clipboard)
 
@@ -209,69 +205,6 @@ class Bot {
 		Run, %loaderFileName%
 	}
 
-	ascend(autoYes:=false) {
-		global
-		exitThread := false
-		local extraClicks := 6
-		local y := yAsc - extraClicks * buttonSize
-
-		if (autoYes) {
-			if (autoAscendDelay > 0) {
-				gui.showWarningSplash(autoAscendDelay . " seconds till ASCENSION! (Abort with Alt+Pause)", autoAscendDelay)
-				if (exitThread) {
-					exitThread := false
-					gui.showSplashAlways("Ascension aborted!")
-					exit
-				}
-			}
-		} else {
-			gui.playWarningSound()
-			msgbox, 260,% script,Salvage Junk Pile & Ascend? ; default no
-			ifmsgbox no
-				exit
-		}
-
-		bot_lib.salvageJunkPile() ; must salvage junk relics before ascending
-
-		bot_lib.switchToCombatTab()
-		bot_lib.scrollDown(ascDownClicks)
-		sleep % zzz * 2
-
-		; Scrolling is not an exact science, hence we click above, center and below
-		loop % 2 * extraClicks + 1
-		{
-			bot_lib.clickPos(xAsc, y)
-			y += buttonSize
-		}
-		sleep % zzz * 4
-		bot_lib.clickPos(xYes, yYes)
-		sleep % zzz * 2
-	}
-
-	salvageJunkPile() {
-		this.game.switchToRelicTab()
-
-		focusRelic := this.configuration.screenShotRelics() || this.configuration.displayRelicsDuration() > 0
-		if (focusRelic) {
-			this.game.clickRelic()
-		}
-
-		if (this.configuration.screenShotRelics()) {
-			this.game.screenShot()
-		}
-
-		if (! this.gui.userDoesAllow("Salvaging junk in " . this.configuration.displayRelicsDuration() . " seconds! (Abort with Alt+Pause)", this.configuration.displayRelicsDuration())) {
-			this.gui.showSplashAlways("Salvage aborted!")
-			exit
-		}
-
-		dialog := this.game.openSalvageJunkPileDialog()
-		this.game.delay(4)
-
-		dialog.confirm_destroy()
-		this.game.delay(2)
-	}
-
 	buyAvailableUpgrades() {
 		this.game.scrollToBottom()
 		this.game.clickBuyAvailableUpgrades()
@@ -406,19 +339,6 @@ class Bot {
 		}
 	}
 	
-	upgrade(times, cc1:=1, cc2:=1, cc3:=1, cc4:=1, skip:=false) {
-		global
-
-		if (!skip) {
-			bot.ctrlClick(xLvl, this.yLvlInit, cc1)
-			bot.ctrlClick(xLvl, this.yLvlInit + oLvl, cc2)
-		}
-		bot.ctrlClick(xLvl, this.yLvlInit + oLvl*2, cc3)
-		bot.ctrlClick(xLvl, this.yLvlInit + oLvl*3, cc4)
-
-		bot.scrollDown(times)
-	}
-
 	formatSeconds(s) {
 		time := 19990101 ; *Midnight* of an arbitrary date.
 		time += %s%, seconds
