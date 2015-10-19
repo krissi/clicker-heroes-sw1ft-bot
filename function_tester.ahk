@@ -7,10 +7,13 @@ SetControlDelay, -1
 
 
 #Include <Bot>
+#Include <Clickable_Start_Strategy>
 
 bot := new Bot(script)
 game := bot.game
 settings_dialog := new SettingsDialog(bot.game.client, bot.game.coordinates, bot.game.client.configuration)
+
+clickable_start := new ClickableStartStrategy(bot.game, bot.gui, bot.configuration)
 
 ; -----------------------------------------------------------------------------------------
 ; -- Hotkeys (+=Shift, !=Alt, ^=Ctrl)
@@ -100,4 +103,8 @@ return
 
 +F4::
 	settings_dialog.closeSaveDialog()
+return
+
++F5::
+	clickable_start.run()
 return

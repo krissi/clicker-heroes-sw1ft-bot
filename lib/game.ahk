@@ -5,11 +5,6 @@
 class Game {
 	; -- Coordinates --------------------------------------------------------------------------
 
-	; Top LVL UP button when scrolled to the bottom
-	xLvl := 100
-	yLvl := 285
-	oLvl := 107 ; offset to next button
-
 	; Ascension button
 	xAsc := 310
 	yAsc := 434
@@ -63,6 +58,14 @@ class Game {
 		this.delay(4)
 	}
 	
+	clickHero() {
+		this.coordinates.hero().click(this.client)
+	}
+	
+	clickRanger(idx) {
+		this.coordinates.getCoordinate("Ranger_" . idx).click(this.client)
+	}
+	
 	; -------------------- Tabs ---------------------------
 
 	switchToCombatTab() {
@@ -107,6 +110,10 @@ class Game {
 		this.scrollUp()
 		this.scrollDown(clickCount + 1)
 		sleep % this.nextHeroDelay * 1000
+	}
+	
+	clickBuyAvailableUpdates() {
+		this.coordinates.buyupgrades().click(this.client)
 	}
 	
 	; ------------------- Buttons --------------------------

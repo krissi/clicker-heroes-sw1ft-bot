@@ -13,7 +13,7 @@ class DebugClient extends Client {
 	}
 
 	clickPos(x, y, clickCount := 1) {
-		this.setPixel(x, y, "red")
+		this.setPixel(this.getAdjustedX(x), this.getAdjustedY(y), "red")
 		base.clickPos(x, y, clickCount)
 	}
 

@@ -119,7 +119,7 @@ class Client {
 		ControlSend,, {q up}{shift up}, % this.winName
 	}
 
-	ctrlClick(xCoord, yCoord, clickCount:=1) {
+	ctrlClickPos(xCoord, yCoord, clickCount:=1) {
 		ControlSend,, {ctrl down}, % this.winName
 		this.clickPos(xCoord, yCoord, clickCount)
 		ControlSend,, {ctrl up}, % this.winName

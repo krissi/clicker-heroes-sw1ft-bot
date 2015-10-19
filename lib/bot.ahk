@@ -160,28 +160,6 @@ class Bot {
 
 	rangers := ["Dread Knight", "Atlas", "Terra", "Phthalo", "Banana", "Lilin", "Cadmia", "Alabaster", "Astraea"]
 
-	rangerPositions() {
-		rangerPositions := {}
-		rangerPositions[1] := {x:180, y:435}
-		rangerPositions[2] := {x:380, y:435}
-		rangerPositions[3] := {x:580, y:435}
-		rangerPositions[4] := {x:780, y:435}
-		rangerPositions[5] := {x:980, y:435}
-		rangerPositions[6] := {x:180, y:495}
-		rangerPositions[7] := {x:380, y:495}
-		rangerPositions[8] := {x:580, y:495}
-		rangerPositions[9] := {x:780, y:495}
-
-		return rangerPositions
-	}
-
-	; Buy Available Upgrades button
-	xBuy := 300
-	yBuy := 582
-
-	xHero := 474
-	yHero := 227
-
 	; Tab safety zone (script will pause when entering)
 	xSafetyZoneL := 8
 	xSafetyZoneR := 505
@@ -197,9 +175,9 @@ class Bot {
 		this.gui := new Gui(script_name, configuration)
 		this.game := new Game(this.gui, configuration)
 		
-		if (this.configuration.useConfigurationAssistant()) {
-			this.configurationAssistant()
-		}
+		;if (this.configuration.useConfigurationAssistant()) {
+		;	this.configurationAssistant()
+		;}
 	}
 
 	__Delete() {
@@ -295,9 +273,8 @@ class Bot {
 	}
 
 	buyAvailableUpgrades() {
-		global
-		bot_lib.clickPos(xBuy, yBuy)
-		sleep % zzz * 3
+		this.game.scrollToBottom()
+		this.game.clickBuyAvailableUpgrades()
 	}
 
 	; Move "gildCount" gilds to given ranger
@@ -347,70 +324,6 @@ class Bot {
 	; ======================== Private Interface ========================
 	; ===================================================================
 
-	; Automatically configure initDownClicks and yLvlInit settings.
-	configurationAssistant() {
-		irisLevel := this.configuration.irisLevel()
-		optimalLevel := this.configuration.optimalLevel()
-		
-		if (irisLevel < 145) {
-			this.gui.playWarningSound()
-			msgbox,,% script,% "Your Iris do not fulfill the minimum level requirement of 145 or higher!"
-			exit
-		}
-
-		if (this.irisThreshold(2010)) { ; Astraea
-			initDownClicks := [6,5,6,5,6,3]
-			yLvlInit := 241
-		} else if (this.irisThreshold(1760)) { ; Alabaster
-			; [6,6,6,5,6,3], 227
-			; [6,5,6,6,6,3], 260
-			; [5,6,6,5,6,3], 293
-			initDownClicks := [6,6,6,5,6,3]
-			yLvlInit := 227
-		} else if (this.irisThreshold(1510)) { ; Cadmia
-			initDownClicks := [6,6,6,6,6,3]
-			yLvlInit := 240
-		} else if (this.irisThreshold(1260)) { ; Lilin
-			initDownClicks := [6,6,6,6,6,3]
-			yLvlInit := 285
-		} else if (this.irisThreshold(1010)) { ; Banana
-			initDownClicks := [6,7,6,7,6,3]
-			yLvlInit := 240
-		} else if (this.irisThreshold(760)) { ; Phthalo
-			initDownClicks := [6,7,7,6,7,3]
-			yLvlInit := 273
-		} else if (this.irisThreshold(510)) { ; Terra
-			initDownClicks := [7,7,7,7,7,3]
-			yLvlInit := 240
-		} else if (this.irisThreshold(260)) { ; Atlas
-			initDownClicks := [7,7,7,8,7,3]
-			yLvlInit := 273
-		} else { ; Dread Knight
-			initDownClicks := [7,8,7,8,7,4]
-			yLvlInit := 257
-		}
-
-		if (irisLevel < optimalLevel - 1001) {
-			levels := optimalLevel - 1001 - irisLevel
-			this.gui.playNotificationSound()
-			msgbox,,% script,% "Your Iris is " . levels . " levels below the recommended ""optimal level - 1001"" rule."
-		}
-	}
-
-	; Check if Iris is within a certain threshold that can cause a toggling behaviour between different settings
-	irisThreshold(lvl) {
-		irisLevel := this.configuration.irisLevel()
-		optimalLevel := this.configuration.optimalLevel()
-		
-		upperThreshold := lvl + 19
-		lowerThreshold := lvl - 20
-		if (irisLevel >= lowerThreshold and irisLevel < upperThreshold) {
-			this.gui.playWarningSound()
-			msgbox,,% script,% "Threshold proximity warning! You should level up your Iris to " . upperThreshold . " or higher."
-		}
-		return irisLevel > lvl
-	}
-	
 	monsterClickerOn(isActive:=true) {
 		global
 		if (deepRunClicks) {
@@ -491,6 +404,19 @@ class Bot {
 		if (showProgressBar) {
 			gui, destroy
 		}
+	}
+	
+	upgrade(times, cc1:=1, cc2:=1, cc3:=1, cc4:=1, skip:=false) {
+		global
+
+		if (!skip) {
+			bot.ctrlClick(xLvl, this.yLvlInit, cc1)
+			bot.ctrlClick(xLvl, this.yLvlInit + oLvl, cc2)
+		}
+		bot.ctrlClick(xLvl, this.yLvlInit + oLvl*2, cc3)
+		bot.ctrlClick(xLvl, this.yLvlInit + oLvl*3, cc4)
+
+		bot.scrollDown(times)
 	}
 
 	formatSeconds(s) {
